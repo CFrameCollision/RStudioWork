@@ -1,0 +1,175 @@
+---
+title: "Lab 7 Report"
+author: "Christopher Byrd"
+date: "2024-11-07"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r include=FALSE, warning=FALSE}
+library(plyr)
+library(DescTools)
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(hrbrthemes)
+library(tidyverse)
+library(viridis)
+library(forcats)
+library(readxl)
+library(knitr)
+
+Module_4_Lab_Data <- read_excel(
+                    "C:/Users/byrds/Downloads/Module 4 Lab Data.xlsx", 
+                      col_types = c("numeric", "numeric"))
+
+data_2017 <- na.omit(Module_4_Lab_Data[[1]])
+data_2007 <- Module_4_Lab_Data[[2]]
+```
+
+### Section 1: Hypothesis
+
+The goal of this research paper is to determine whether there is 
+statistically significant regarding age of regular prayers from 2007 to 
+2017. To that end, the null and research hypothesis are as follows:
+
+> Null: There is no significant difference in age of those who pray
+regularly between 2007 and 2017.\
+> Research: Those who are praying regularly will be significantly older
+on average in 2017 than in 2007.
+
+> H~0~: Age~2007~ = Age~2017~\
+> H~1~: Age~2007~ < Age~2017~
+
+### Section 2: Data
+
+The data used for this report is from two different years of the Baylor 
+Surveys of Religious Life, 2007 and 2017. In this data, respondents who 
+said they prayed one or more times a day were asked to report their age.
+The range of ages falls within 17 and 95 for ‘07 and 18 and 96 for ‘17.
+
+### Section 3: Method
+
+Using RStudio, the data set was packaged into two variables,
+*`data_2007`* and *`data_2017`*. From there, the following code was ran:
+
+```{r results='hide'}
+# Stat sig of differences in age of consistent prayer
+
+t.test(data_2007, data_2017, alternative = c("less"),
+       conf.level = 0.95)
+```
+A left-handed test was performed to determine if the older population 
+observed in 2017 versus 2007 was significant.\
+
+In the previous report, the level of prayer of two select age groups was
+evaluated. To analyze this data, the following code was applied to
+subset the data.
+
+```{r results='hide'}
+# Tests for significance between data sets
+
+# Create a data frame of 21>=
+lessthan22_07 <- subset(data_2007, data_2007 < 22)
+lessthan22_17 <- subset(data_2017, data_2017 < 22)
+
+# Create a data frame of 69=<
+greaterthan68_07 <- subset(data_2007, data_2007 > 68)
+greaterthan68_17 <- subset(data_2017, data_2017 > 68)
+
+# Stat sig for 21-
+t.test(lessthan22_07, lessthan22_17, alternative = c("less"),
+       conf.levels = 0.95)
+
+# Stat sig for 69+
+t.test(greaterthan68_07, greaterthan68_17, alternative = c("greater"),
+       conf.levels = 0.95)
+```
+
+A left-handed analysis was performed on 21 and under, while a
+right-handed analysis was performed on 69 and over.
+
+I experimented with concatenating the results using a C function to
+create a more readable report. This entire document is written as a
+R markdown document. Much of the C code was borrowed from stack 
+overflow, at least with how to pull the values into the code.
+
+```{r}
+format_ttest <- function(test) {
+  sprintf("t = %.2f, df = %.2f, p-value = %.4f, 95%% CI = (%.2f, %.2f)",
+          test$statistic, test$parameter, test$p.value,
+          test$conf.int[1], test$conf.int[2])
+}
+```
+
+"`%.if`" is the primary argument called, where "`%`" calls the literal
+value and "`.if`" formats it to as a precise decimal, with "`i`"
+determining to which decimal place. Passing the results of "`t.test()`"
+through the function results in a concatenated string with the format
+seen below in results.
+
+### Section 4: Results
+
+The results of each test is as follows:
+
+```{r echo=FALSE, results='markup'}
+# Stat sig of differences in age of consistent prayer
+test1 <- t.test(data_2007, data_2017, alternative = c("less"),
+       conf.level = 0.95)
+
+# Tests for significance between data sets
+
+# Create a data frame of 21≥
+lessthan22_07 <- subset(data_2007, data_2007 < 22)
+lessthan22_17 <- subset(data_2017, data_2017 < 22)
+
+# Create a data frame of 69≤
+greaterthan68_07 <- subset(data_2007, data_2007 > 68)
+greaterthan68_17 <- subset(data_2017, data_2017 > 68)
+
+# Stat sig for 21-
+test2 <- t.test(lessthan22_07, lessthan22_17, alternative = c("less"),
+       conf.levels = 0.95)
+
+# Stat sig for 69+
+test3 <- t.test(greaterthan68_07, greaterthan68_17,
+                alternative = c("greater"), conf.levels = 0.95)
+
+format_ttest <- function(test) {
+  sprintf("t = %.2f, df = %.2f, p-value = %.4f*, 95%% CI = (%.2f, %.2f)",
+          test$statistic, test$parameter, test$p.value,
+          test$conf.int[1], test$conf.int[2])
+}
+```
+Results of 2007 versus 2017:
+```{r echo=FALSE, results='markup'}
+cat(format_ttest(test1), "\n\n")
+```
+Results of 2007 versus 2017 with respects to 21 and younger
+(left-tailed):
+```{r echo=FALSE, results='markup'}
+cat(format_ttest(test2), "\n\n")
+```
+Results of 2007 versus 2017 with respects to 69 and older
+(right-tailed):
+```{r echo=FALSE, warning=FALSE, results='markup'}
+cat(format_ttest(test3), "\n\n")
+```
+\* Note that p-value depicts a zero value if below <0.0001.
+
+### Section 5: Discussion and Conclusion
+
+From these results, the idea that those who are praying regularly in 
+2017 are older than those in 2007 is statistically significant.
+Because this, we can reject the null hypothesis and accept the research
+hypothesis.\
+
+What didn't fair so well was my previous analyses of the prayer habits 
+of ages 21 and 69. According to the results, there was no significant 
+difference in observed ages between samples in each age group.
+Accordingly, in relation to this group, we can accept the null, even
+if the research hypothesis isn't quite applicable, as there is no
+significant changes within the average age in each group. This means
+that any increase or decrease in chance may be caused by sampling
+error or chance.

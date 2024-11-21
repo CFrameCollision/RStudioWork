@@ -1,0 +1,227 @@
+---
+title: "Lab 8 Report"
+author: "Christopher Byrd"
+date: "2024-11-11"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setupChunk, warning=FALSE, include=FALSE}
+library(plyr)
+library(DescTools)
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(hrbrthemes)
+library(tidyverse)
+library(viridis)
+library(forcats)
+library(readxl)
+library(knitr)
+library(addinslist)
+library(clipr)
+
+
+Module_8_Lab_Data <- read_excel(
+  "C:/Users/byrds/Downloads/Module 8 Lab Data.xlsx")
+```
+
+### Section 1: Hypothesis
+
+The goal of this research paper is to determine if regular prayer has
+any correlation to religious service attendance. Also examined is the
+affect sex and prayer has in relation to service attendance. The
+following are the hypothesizes examined:
+
+> Null: There is no significant correlation between prayer frequency,
+> gender, and attendance of religious services.\
+> Research~1~: There will be a significant increase in attendance with
+> an increase in prayer frequency\
+> Research~2~: Women will attend religious services more with higher
+> levels of prayer when compared to men.
+
+> H~0~: Higher prayer frequency + gender =/= More religious attendance\
+> H~1~: Higher prayer frequency = More religious attendance\
+> H~2~: Women = More religious attendance
+
+### Section 2: Data
+
+The data used for this report is from the Baylor Survey of Religious
+Life. The data records three different metrics of each respondent:
+frequency of prayer, gender, and attendance of religious services. Data
+is encoded as ordinal for frequency and attendance, while gender is
+nominal.
+
+### Section 3: Method
+
+Using RStudio, data was first packaged within a `data.frame` to make for
+easier coding, as the `data.frame` it came prepackaged in had an
+excessively long name.
+
+```{r warning=FALSE, results='hide'}
+betterList <- data.frame(prayerFrequency = Module_8_Lab_Data$PrayerFreq,
+                         attendance = Module_8_Lab_Data$Attendance,
+                         gender = Module_8_Lab_Data$Gender)
+```
+
+#### Section 3.1: Prayer Frequency\
+
+An ANOVA (`aov()`) was performed with respects to prayer frequency and 
+religious service attendance. A `TukeyHSD()` was performed to determine 
+where variance might be resulting from.
+
+```{r warning=FALSE, results='hide'}
+# Prayer and Attendance
+
+storedVal <- aov(betterList$attendance~betterList$prayerFrequency,
+                 betterList)
+summary(storedVal)
+
+TukeyHSD(aov(betterList$attendance~as.factor(betterList$prayerFrequency),
+             betterList))
+```
+
+#### Section 3.2: Prayer and Gender Frequency\
+
+`lm()` was used to perform an analysis (factorial ANOVA) of the 
+interaction between gender and prayer frequency and how both affect 
+attendance of religious services. An ANOVA was used to perform a 
+`TukeyHSD()` test. Note that results of the `aov()` and `lm()` are 
+similar and within margin of error; thus it seems reasonable to use 
+`aov()` to construct a `TukeyHSD`, as there is no applicable method 
+within `TukeyHSD` to run the test with `lm()` as the input. Furthermore,
+documentation within the *stats* package reveals that `aov()` is a 
+wrapper for `lm()` with differing output methods; therefore, results
+should be near identical no matter the scenario.
+
+```{r warning=FALSE, results='hide'}
+# Gender, Prayer, and Attendance
+
+storedVal <- lm(betterList$attendance~betterList$prayerFrequency*betterList$gender,
+                data = betterList)
+summary(storedVal)
+
+TukeyHSD(aov(betterList$attendance~as.factor(betterList$prayerFrequency)*as.factor(betterList$gender),
+             data = betterList))
+```
+
+Lastly, *ggplot2* was used to create a interaction plot between service
+attendance in relation to gender and prayer frequency.
+
+```{r warning=FALSE, results='hide', fig.keep='none'}
+# ggplot2 `interaction.plot()`
+
+listInt <- ddply(betterList,.(prayerFrequency,gender),summarise, val = mean(attendance))
+
+ggplot() +
+  geom_point(data = betterList, aes(x = prayerFrequency, y = attendance, colour = gender)) +
+  geom_point(data = listInt, aes(x = prayerFrequency, y = val, colour = gender)) +
+  geom_line(data = listInt, aes(x = prayerFrequency, y = val, group = gender, colour = gender)) +
+  ylim(1, 5) +
+  theme_bw() +
+  labs(title = "Interaction Plot", x = "Prayer Frequency", y = "Mean of Attendance")
+```
+
+### Section 4: Results
+
+From these tests, a number of discoveries emerge. The data is as 
+follows:
+
+#### Section 4.1: Attendance in Relation to Prayer\
+
+1. ANOVA analysis ~
+```{r echo=FALSE, results='markup'}
+# Gender, Prayer, and Attendance
+storedVal <- aov(betterList$attendance~betterList$prayerFrequency,
+                 betterList)
+summary(storedVal)
+```
+
+2. `TukeyHSD()` ~
+```{r echo=FALSE, results='markup'}
+TukeyHSD(aov(betterList$attendance~as.factor(betterList$prayerFrequency),
+             betterList))
+```
+
+#### Section 4.2: Attendance in Relation to Sex and Prayer:\
+
+1. `lm()` analysis ~
+
+```{r echo=FALSE, results='markup'}
+# Gender, Prayer, and Attendance
+
+storedVal <- lm(betterList$attendance~betterList$prayerFrequency*betterList$gender,
+                data = betterList)
+summary(storedVal)
+```
+
+2. `TukeyHSD()` using `AOV()` ~
+
+```{r echo=FALSE, results='markup'}
+TukeyHSD(aov(betterList$attendance~as.factor(betterList$prayerFrequency)*as.factor(betterList$gender),
+             data = betterList))
+```
+
+3. Interaction plot: **See Section 6, Fig. 1.**
+
+#### Section 4.3: Key Values\
+
+Taking what is most important for prayer frequency, there is a 
+statistically significant link between prayer and attendance. With an 
+f-statistic of 733.6, there is no possible combinations of degrees of 
+freedom in which the results, according to the critical f-value, are 
+not significant (Fig. 2). The p-value for this test is 2E-16, or 
+0.0000000000000002. *Fig. 1* represents this graphically by way of mean 
+of attendance based on prayer rates. The Tukey Post Hoc test 
+(`TukeyHSD()`) reveals that the interaction of each level between both 
+factors is significant, with p-values listed as 0.\
+
+For attendance in relation to gender and prayer, we see a mix of 
+statistical significance in interaction between genders and prayer 
+frequency. Overall, the findings within the `lm()` analysis shows
+prayer frequency has a statistically significant effect on service 
+attendance. However, gender does not have this effect. The individual 
+interactions displayed in the Tukey Post Hoc test corroborate this.
+
+### Section 5: Discussion and Conclusion
+
+From these results, it's clear that prayer frequency has a direct and 
+measurable impact on attendance of religious services. Gender, however 
+has no significant impact, and any seen is likely due to error. This is 
+further confirmed by *fig. 1*, in which we can see that the attendance 
+results for each gender according to prayer frequency show similar 
+trends.
+
+It stands to reason the null is rejected and H~1~ is accepted. However,
+H~2~ is rejected on the grounds of not possessing statistical 
+significance.
+
+### Section 6: Graphics and Visuals
+
+```{r echo=FALSE, warning=FALSE, fig.cap="Fig. 1. Line plot. Effect of gender and prayer frequency on mean of attendance."}
+# ggplot2 `interaction.plot()`
+
+listInt <- ddply(betterList,.(prayerFrequency,gender),summarise, val = mean(attendance))
+
+ggplot() +
+  geom_point(data = betterList, aes(x = prayerFrequency, y = attendance, colour = gender)) +
+  geom_point(data = listInt, aes(x = prayerFrequency, y = val, colour = gender)) +
+  geom_line(data = listInt, aes(x = prayerFrequency, y = val, group = gender, colour = gender)) +
+  ylim(1, 5) +
+  theme_bw() +
+  labs(title = "Interaction Plot", x = "Prayer Frequency", y = "Mean of Attendance", 
+       colour = "Gender")
+```
+
+|                         | Df     | Sum Sq |Mean Sq| F value | Pr(>F)     |
+|-------------------------|--------|--------|-------|---------|------------|
+| Prayer Frequency        | 1      | 3166   | 3166  | 733.2   | <2e-16 *** |
+| Residuals               | 1398   | 6037   | 4     | 4       |            |
+Fig. 2. F table for Prayer Frequency.\
+
+| F-statistic: | Df~denom~:| Df~num~:  | p-value:  |
+|--------------|-----------|-----------|-----------|
+| 244.6        | 3         | 1396      | < 2.2e-16 |
+
+Fig. 3. Linear Model table for Prayer and Gender.

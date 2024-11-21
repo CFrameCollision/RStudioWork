@@ -1,0 +1,3 @@
+"0","betterList <- data.frame(prayerFrequency = Module_8_Lab_Data$PrayerFreq,"
+"0","                         attendance = Module_8_Lab_Data$Attendance,"
+"0","                         gender = Module_8_Lab_Data$Gender)"

@@ -1,0 +1,300 @@
+---
+title: "Unit 9 Lab Report"
+author: "Christopher Byrd"
+date: '`r Sys.Date()`'
+output:
+  pdf_document:
+    latex_engine: lualatex
+    highlight: pygments
+    toc: true
+    toc_depth: 3
+mainfont: Times New Roman
+---
+
+```{r setupChunk, warning=FALSE, include=FALSE}
+library(plyr)
+library(DescTools)
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(hrbrthemes)
+library(tidyverse)
+library(viridis)
+library(forcats)
+library(readxl)
+library(knitr)
+library(addinslist)
+library(clipr)
+library(gmodels)
+library(thematic)
+
+Module_9_Lab_Data <- read_excel("data/Module 9 Lab Data.xlsx", 
+    col_types = c("numeric", "numeric"))
+```
+
+### Section 1: Hypothesis
+
+The goal of this research paper is to determine if regular prayer has
+any correlation on the opinion of the federal government allowing prayer 
+in school. The following are the hypothesizes examined:
+
+> Null: There is no significant correlation between prayer frequency and
+> opinion on prayer in school.\
+> Research~1~: There will be a significance between prayer frequency and
+> opinion on prayer in schools.
+
+> H~0~: Higher prayer frequency ≠ Significance on opinion of prayer in
+School\
+> H~1~: Higher prayer frequency = Significance on opinion of prayer in 
+School
+
+### Section 2: Data
+
+The data used for this report is from the Baylor Survey of Religious
+Life. The answers of participants are encoded as follows:
+
+\newpage
+| Question asked or description      |         Answers          |
+|------------------------------------|--------------------------|
+| About how much time do you         | 0 - Never                |
+| spend praying alone outside        | 1 - On certain occasions |
+| of religious services?             | 2 - Once a week or less  |
+|                                    | 3 - A few times a week   |
+|                                    | 4 - Once daily           |
+|                                    | 5 - Several times a day  |
+|------------------------------------|--------------------------|
+| The federal government should      | 1 - Strongly disagree    |
+| allow prayer in public school      | 2 - Disagree             |
+|                                    | 3 - Agree                |
+|                                    | 4 - Strongly agree       |
+|                                    | 8 - Undecided            |
+
+The preceding data is nominal.
+
+### Section 3: Method
+
+Using RStudio, the data was imported from an excel sheet using the
+`readxl` package and directed into the variable `Module_9_Lab_Data`. To
+analyse the data, the function `CrossTable()` was run. It creates a
+cross tabulation table and runs a chi-squared test.
+
+```{r warning=FALSE, results='hide', eval=FALSE}
+CrossTable(Module_9_Lab_Data$PrayerFreq, Module_9_Lab_Data$PrayerSchool,
+           expected = TRUE, dnn = c("Prayer Frequency",
+                                    "Prayer in School"),
+           format = c("SPSS"))
+```
+
+From here, a bar chart of opinions on prayer in school related to prayer
+habits was created. To do so was a bit of a task. 
+
+```{r warning=FALSE, results='hide', eval=FALSE}
+data <- Module_9_Lab_Data
+
+result <- data %>%
+  group_by(PrayerFreq, PrayerSchool) %>%
+  summarise(Count = n(), .groups = 'drop')
+
+# View the result
+print(result, n = 35)
+```
+
+To create the graph, prayer habit related to total occurrence of prayer
+in school opinion has to be calculated. There isn't a completely 
+straightforward way of doing this in R, so I opted to use summarise and
+print to find the totals, as seen above. Through this, I learned `%>%` is
+called the pipe symbol and feeds output to the subsequent function 
+(essentially doing what `<-` does backwards).\
+
+Then came the tedious part. I transcribed the amount of occurrences by
+hand to a `data.frame` capable of displaying the data in the graph. I'm 
+not entirely certain why I had to use `rep()` on my Habit variable, other
+than RStudio threw an error saying that lengths between response and
+habit must be identical.
+
+```{r warning=FALSE, results='hide'}
+# Data
+data <- data.frame(
+  Habit = rep(paste("Habit", 0:5), each = 5),
+  Response = rep(c("Strongly Disagree", "Disagree",
+                   "Agree", "Strongly Agree", "Undecided"), times = 6),
+  Count = c(117, 46, 39, 7, 15,   # Habit 0
+            41, 56, 98, 35, 26,   # Habit 1
+            9, 13, 40, 13, 9,     # Habit 2
+            14, 26, 83, 55, 14,   # Habit 3
+            17, 25, 108, 97, 20,  # Habit 4
+            17, 26, 112, 198, 19) # Habit 5  
+)
+```
+
+Finally, here's the graph code, with one quick add-on: originally, the
+responses were displayed without a logical order. They had to be manually
+coerced to display in the order desired using a `factor()`.
+
+```{r warning=FALSE, results='hide', eval=FALSE}
+# Reordering Response levels
+data$Response <- factor(data$Response, 
+                        levels = c("Undecided", "Strongly Disagree",
+                                   "Disagree", "Agree", 
+                                   "Strongly Agree"))
+
+# Create the plot
+ggplot(data, aes(x = Response, y = Count, fill = Response)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ Habit, scales = "free_y") +
+  labs(
+    title = "Survey Responses for Prayer Habits",
+    x = "Prayer should be allowed in public schools",
+    y = "Count") +
+  theme(
+    axis.text.x = element_blank()
+    ) +
+  scale_fill_manual(values = c("#787878", "#ff1100",
+                               "#ff6961", "#92ff8c", "#0dff00"))
+```
+
+Note that the y-axis are *intentionally* different in each graph in 
+figure 1. This is to better illustrate relationships in the graphs
+rather than just raw numbers. Figure 2 offers an un-adjusted view for
+better transparency on raw numbers.
+
+### Section 4: Results
+
+The results from `CrossTable()` can be viewed in full in figure 3. As for
+the results of the Chi-squared test (fig. 4), it returns a p-value of 
+1.06E-89, well into statistical significance. This is further
+demonstrated in figure 1.
+
+### Section 5: Discussion and Conclusion
+
+From these results, it's clear that prayer frequency has a direct and 
+measurable impact on opinion regarding the allowance of prayer by the
+federal government in schools.
+
+It stands to reason the null is rejected and H~1~ is accepted.
+
+### Section 6: Graphics and Visuals
+*Note formatting in this section is weird due to figure sizes.*\
+
+```{r echo=FALSE, fig.cap="Bar graph with adjusted Y-value. Opinion on prayer in public school based upon prayer habit."}
+# Reordering Response levels
+data$Response <- factor(data$Response, 
+                        levels = c("Undecided", "Strongly Disagree", "Disagree", "Agree", "Strongly Agree"))
+
+# Create the plot
+ggplot(data, aes(x = Response, y = Count, fill = Response)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ Habit, scales = "free_y") +
+  labs(
+    title = "Survey Responses for Prayer Habits",
+    x = "Prayer should be allowed in public schools",
+    y = "Count") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )+
+  scale_fill_manual(values = c("#787878", "#ff1100",
+                               "#ff7878", "#92ff8c", "#0dff00"))
+```
+
+```{r echo=FALSE, fig.cap="Bar graph with non-adjusted Y-value. Opinion on prayer in public school based upon prayer habit."}
+# Reordering Response levels
+data$Response <- factor(data$Response, 
+                        levels = c("Undecided", "Strongly Disagree", "Disagree", "Agree", "Strongly Agree"))
+
+# Create the plot
+ggplot(data, aes(x = Response, y = Count, fill = Response)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ Habit) +
+  labs(
+    title = "Survey Responses for Prayer Habits",
+    x = "Prayer should be allowed in public schools",
+    y = "Count") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank()
+  )+
+  scale_fill_manual(values = c("#787878", "#ff1100",
+                               "#ff7878", "#92ff8c", "#0dff00"))
+```
+
+\newpage
+
+|Prayer Opinion:  |        1  |        2  |        3  |        4  |        8  |           | 
+|-----------------|----------:|----------:|----------:|----------:|----------:|----------:|
+|Prayer Frequency |           |           |           |           |           | Row Total |
+|-----------------|           |           |           |           |           |-----------|
+|               0 |      117  |       46  |       39  |        7  |       15  |      224  | 
+|                 |   34.523  |   30.830  |   77.075  |   65.032  |   16.539  |           | 
+|                 |  197.038  |    7.464  |   18.809  |   51.786  |    0.143  |           | 
+|                 |   52.232% |   20.536% |   17.411% |    3.125% |    6.696% |   16.057% | 
+|                 |   54.419% |   23.958% |    8.125% |    1.728% |   14.563% |           | 
+|                 |    8.387% |    3.297% |    2.796% |    0.502% |    1.075% |           | 
+|-----------------|-----------|-----------|-----------|-----------|-----------|-----------|
+|               1 |       41  |       56  |       98  |       35  |       26  |      256  | 
+|                 |   39.455  |   35.234  |   88.086  |   74.323  |   18.902  |           | 
+|                 |    0.060  |   12.238  |    1.116  |   20.805  |    2.666  |           | 
+|                 |   16.016% |   21.875% |   38.281% |   13.672% |   10.156% |   18.351% | 
+|                 |   19.070% |   29.167% |   20.417% |    8.642% |   25.243% |           | 
+|                 |    2.939% |    4.014% |    7.025% |    2.509% |    1.864% |           | 
+|-----------------|-----------|-----------|-----------|-----------|-----------|-----------|
+|               2 |        9  |       13  |       40  |       13  |        9  |       84  | 
+|                 |   12.946  |   11.561  |   28.903  |   24.387  |    6.202  |           | 
+|                 |    1.203  |    0.179  |    4.260  |    5.317  |    1.262  |           | 
+|                 |   10.714% |   15.476% |   47.619% |   15.476% |   10.714% |    6.022% | 
+|                 |    4.186% |    6.771% |    8.333% |    3.210% |    8.738% |           | 
+|                 |    0.645% |    0.932% |    2.867% |    0.932% |    0.645% |           | 
+|-----------------|-----------|-----------|-----------|-----------|-----------|-----------|
+|               3 |       14  |       26  |       83  |       55  |       14  |      192  | 
+|                 |   29.591  |   26.426  |   66.065  |   55.742  |   14.176  |           | 
+|                 |    8.215  |    0.007  |    4.341  |    0.010  |    0.002  |           | 
+|                 |    7.292% |   13.542% |   43.229% |   28.646% |    7.292% |   13.763% | 
+|                 |    6.512% |   13.542% |   17.292% |   13.580% |   13.592% |           | 
+|                 |    1.004% |    1.864% |    5.950% |    3.943% |    1.004% |           | 
+|-----------------|-----------|-----------|-----------|-----------|-----------|-----------|
+|               4 |       17  |       25  |      108  |       97  |       20  |      267  | 
+|                 |   41.151  |   36.748  |   91.871  |   77.516  |   19.714  |           | 
+|                 |   14.174  |    3.756  |    2.832  |    4.897  |    0.004  |           | 
+|                 |    6.367% |    9.363% |   40.449% |   36.330% |    7.491% |   19.140% | 
+|                 |    7.907% |   13.021% |   22.500% |   23.951% |   19.417% |           | 
+|                 |    1.219% |    1.792% |    7.742% |    6.953% |    1.434% |           | 
+|-----------------|-----------|-----------|-----------|-----------|-----------|-----------|
+|               5 |       17  |       26  |      112  |      198  |       19  |      372  | 
+|                 |   57.333  |   51.200  |  128.000  |  108.000  |   27.467  |           | 
+|                 |   28.374  |   12.403  |    2.000  |   75.000  |    2.610  |           | 
+|                 |    4.570% |    6.989% |   30.108% |   53.226% |    5.108% |   26.667% | 
+|                 |    7.907% |   13.542% |   23.333% |   48.889% |   18.447% |           | 
+|                 |    1.219% |    1.864% |    8.029% |   14.194% |    1.362% |           | 
+|-----------------|-----------|-----------|-----------|-----------|-----------|-----------|
+|    Column Total |      215  |      192  |      480  |      405  |      103  |     1395  | 
+|                 |   15.412% |   13.763% |   34.409% |   29.032% |    7.384% |           | 
+
+\begin{center}
+
+Total Observations in Table: 1395
+
+\end{center}
+
+Figure 3. Cross tabulation table. See appendix for key.
+
+\newpage
+
+|Pearson's Chi-squared test|            |                   |
+|--------------------------|------------|-------------------|
+|Chi^2 =  482.9719         | d.f. =  20 | p =  1.063345e-89 |
+Figure 4. Chart. Pearson's chi-squared test.
+
+### Section 7: Appendix
+
+\begin{tabular}{|l|}
+\hline
+\textbf{Cell Contents Key for cross tabulation table} \\ \hline
+Count                              \\ \hline
+Expected Values                    \\ \hline
+Chi-square contribution            \\ \hline
+Row Percent                        \\ \hline
+Column Percent                     \\ \hline
+Total Percent                      \\ \hline
+\end{tabular}

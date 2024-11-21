@@ -1,0 +1,7 @@
+\contentsline {subsubsection}{Section 1: Hypothesis}{1}{section*.2}%
+\contentsline {subsubsection}{Section 2: Data}{1}{section*.3}%
+\contentsline {subsubsection}{Section 3: Method}{2}{section*.4}%
+\contentsline {subsubsection}{Section 4: Results}{3}{section*.5}%
+\contentsline {subsubsection}{Section 5: Discussion and Conclusion}{3}{section*.6}%
+\contentsline {subsubsection}{Section 6: Graphics and Visuals}{3}{section*.7}%
+\contentsline {subsubsection}{Section 7: Appendix}{7}{section*.8}%

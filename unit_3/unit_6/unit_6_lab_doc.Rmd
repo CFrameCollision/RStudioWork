@@ -1,0 +1,95 @@
+---
+title: "Lab 6 Report"
+author: "Christopher Byrd"
+date: "11/10/2024"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r include=FALSE, warning=FALSE}
+library(plyr)
+library(DescTools)
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(hrbrthemes)
+library(tidyverse)
+library(viridis)
+library(forcats)
+library(readxl)
+library(knitr)
+
+Module_6_Lab_Data_1_ <- read_excel(
+  "C:/Users/byrds/Downloads/Module 6 Lab Data (1).xlsx", 
+  col_types = c("numeric"))
+
+incomeData <- Module_6_Lab_Data_1_[[1]]
+```
+
+### Section 1: Hypothesis
+
+The goal of this research paper is to determine whether the average 
+income of people who pray regularly in the US is similar to that if the 
+rest of the world. To that end, the null and research hypothesis are as 
+follows:
+
+> Null: There is no significant difference in income between regular 
+prayers in the US and other countries.\
+> Research: Those who are praying regularly in the US will have a higher 
+average income than individuals in other countries.
+
+> H~0~: USA~Income~ = World~Income~\
+> H~1~: USA~Income~ > USA~Income~
+
+### Section 2: Data
+
+The data used for this report is regarding the USA is from the 2017 
+*Baylor Survey of Religious Life*. Participants selected an ordinal 
+range describing their yearly income, with midpoints of each category 
+compiled for research purposes. Data for other nations was ascertained 
+from the internet.
+
+### Section 3: Method
+
+Using RStudio, the data set was packaged into a variable,
+*`incomeData`*. From there, the following code was ran:
+
+```{r results='hide'}
+test01 <- ZTest(incomeData, mu = c(11230), sd_pop = c(679),
+                alternative = c("greater"), paired = FALSE)
+```
+A right-handed test was performed to determine if the US has a higher 
+average income, and, if so, whether it was statistically significant.\
+
+```{r results='hide'}
+format_ztest <- function(test) {
+  sprintf("z = %.2f, StDev Pop = %.2f, p-value = %.4f*, 95%% CI = (%.2f, %.2f)",
+          test$statistic, test$parameter, test$p.value,
+          test$conf.int[1], test$conf.int[2])
+}
+```
+
+### Section 4: Results
+
+The results of the test is as follows:
+
+```{r echo=FALSE, results='markup'}
+cat(format_ztest(test01))
+```
+
+### Section 5: Discussion and Conclusion
+
+From these results, the idea that those who are praying regularly in 
+2017 are older than those in 2007 is statistically significant.
+Because this, we can reject the null hypothesis and accept the research
+hypothesis.\
+
+What didn't fair so well was my previous analyses of the prayer habits 
+of ages 21 and 69. According to the results, there was no significant 
+difference in observed ages between samples in each age group.
+Accordingly, in relation to this group, we can accept the null, even
+if the research hypothesis isn't quite applicable, as there is no
+significant changes within the average age in each group. This means
+that any increase or decrease in chance may be caused by sampling
+error or chance.
