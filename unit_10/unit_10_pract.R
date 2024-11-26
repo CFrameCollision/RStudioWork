@@ -24,3 +24,5 @@ cor(Module_10_PA_Data_1)
 rcorr(as.matrix(Module_10_PA_Data_1), type = "pearson")
 
 rsq <- function (x, y) cor(x, y) ^ 2
+
+rsq(as.matrix(Module_10_PA_Data_1), as.matrix(Module_10_PA_Data_1))
