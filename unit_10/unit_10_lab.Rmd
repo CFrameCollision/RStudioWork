@@ -1,0 +1,76 @@
+---
+title: "Unit 10 Lab Report"
+author: "Christopher Byrd"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: lualatex
+    highlight: pygments
+    toc: true
+    toc_depth: 3
+mainfont: Times New Roman
+---
+
+```{r setupChunk, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(extrafont)
+library(ggplot2)
+library(ggthemes)
+library(hrbrthemes)
+library(thematic)
+library(extrafontdb)
+library(readxl)
+library(colorspace)
+library(addinslist)
+library(clipr)
+library(gmodels)
+library(Hmisc)
+library(RColorBrewer)
+library(DescTools)
+library(viridis)
+
+Module_10_Lab_Data <- read_excel("data/Module 10 Lab Data.xlsx", 
+                                 col_types = c("numeric", "numeric"))
+```
+
+### Section 1: Hypothesis
+
+The goal of this research paper is to determine if regular prayer has
+any correlation on the opinion of the federal government allowing prayer 
+in school. The following are the hypothesizes examined:
+
+> Null: There is no significant correlation between prayer frequency and
+> opinion on prayer in school.\
+> Research~1~: There will be a significance between prayer frequency and
+> opinion on prayer in schools.
+
+> H~0~: ρ~xy~ = 0
+> H~1~: r~xy~ ≠ 0
+
+### Section 2: Data
+
+### Section 3: Method
+
+```{r warning=FALSE, results='hide', eval=FALSE}
+CrossTable(Module_9_Lab_Data$PrayerFreq, Module_9_Lab_Data$PrayerSchool,
+           expected = TRUE, dnn = c("Prayer Frequency",
+                                    "Prayer in School"),
+           format = c("SPSS"))
+```
+
+### Section 4: Results
+
+The results from `CrossTable()` can be viewed in full in figure 3. As for
+the results of the Chi-squared test (fig. 4), it returns a p-value of 
+1.06E-89, well into statistical significance. This is further
+demonstrated in figure 1.
+
+### Section 5: Discussion and Conclusion
+
+From these results, it's clear that prayer frequency has a direct and 
+measurable impact on opinion regarding the allowance of prayer by the
+federal government in schools.
+
+It stands to reason the null is rejected and H~1~ is accepted.
+
+### Section 6: Graphics and Visuals
