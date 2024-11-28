@@ -27,8 +27,8 @@ rsq(Module_10_Lab_Data, Module_10_Lab_Data)
 graphdata <- as.data.frame(Module_10_Lab_Data)
 
 ggplot(data = graphdata, aes(x = Age,y = `Income Interval`)) +
-  geom_point(shape = 18, color = "darkred") +
-  geom_smooth(method = lm) +
+  geom_point(shape = 18, color = "black") +
+  geom_smooth(method = lm, color = "#f21f1f") +
   xlim(0, 100) +
   ylim(0, 8) +
-  theme_ipsum()
+  theme_bw()

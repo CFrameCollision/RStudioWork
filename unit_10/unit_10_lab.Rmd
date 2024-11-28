@@ -44,18 +44,66 @@ in school. The following are the hypothesizes examined:
 > Research~1~: There will be a significance between prayer frequency and
 > opinion on prayer in schools.
 
-> H~0~: ρ~xy~ = 0
+> H~0~: ρ~xy~ = 0\
 > H~1~: r~xy~ ≠ 0
 
+\newpage
 ### Section 2: Data
+
+The data being utilized is from the Baylor Survey of Religious Life.
+Participants were asked to respond with their age and the bracket to which
+their income falls within. The following code book was used:
+
+| Question or Description    |        Possible Answers           |
+|----------------------------|-----------------------------------|
+| Age range of people who    | Range: 17-95                      |
+| pray once or several times |                                   |
+| a day as reported in 2017. |                                   |
+|--------------------------- |-----------------------------------|
+| By your best estimate,     | 1) $10,000 or less                |
+| what was your total        | 2) $10,001 to $20,000             |
+| household income last year,| 3) $20,001 to $35,000             |
+| before taxes?              | 4) $35,001 to $50,000             |
+|                            | 5) $50,001 to $100,000            |
+|                            | 6) $100,001 to $150,000           |
+|                            | 7) $150,001 or more               |
 
 ### Section 3: Method
 
+To evaluate the data, Pearson's r was calculated using `rcorr`, a
+function which evaluates Pearson's r and and the associated P-value. The
+data needed to be coerced into a matrix to allow calculation of each
+variable. The other option that exists is to create two separate data
+frames for each variable.
+
 ```{r warning=FALSE, results='hide', eval=FALSE}
-CrossTable(Module_9_Lab_Data$PrayerFreq, Module_9_Lab_Data$PrayerSchool,
-           expected = TRUE, dnn = c("Prayer Frequency",
-                                    "Prayer in School"),
-           format = c("SPSS"))
+rcorr(as.matrix(Module_10_Lab_Data), type = "pearson")
+```
+
+To determine R^2^, I took a function off the internet to create a 
+function for evaluating R^2^. The original function required you to 
+coerce the variables to be matrices, so I put it in the function to 
+avoid this.
+
+```{r warning=FALSE, results='hide', eval=FALSE}
+rsq <- function (x, y) cor(as.matrix(x), as.matrix(y)) ^ 2
+
+rsq(Module_10_Lab_Data, Module_10_Lab_Data)
+```
+
+Lastly, ggplot2 was used to produce a scatter plot. This was achieved
+through the geom `geom_point()`, while `geom_smooth()` was used to create
+the trend line.
+
+```{r warning=FALSE, results='hide', eval=FALSE}
+graphdata <- as.data.frame(Module_10_Lab_Data)
+
+ggplot(data = graphdata, aes(x = Age,y = `Income Interval`)) +
+  geom_point(shape = 18, color = "black") +
+  geom_smooth(method = lm, color = "#f21f1f") +
+  xlim(0, 100) +
+  ylim(0, 8) +
+  theme_bw()
 ```
 
 ### Section 4: Results
@@ -74,3 +122,18 @@ federal government in schools.
 It stands to reason the null is rejected and H~1~ is accepted.
 
 ### Section 6: Graphics and Visuals
+
+```{r warning=FALSE, echo=FALSE, fig.cap="Scatter plot with trend line. Age and income of respondents."}
+graphdata <- as.data.frame(Module_10_Lab_Data)
+
+ggplot(data = graphdata, aes(x = Age,y = `Income Interval`)) +
+  geom_point(shape = 18, color = "black") +
+  geom_smooth(method = lm, color = "#f21f1f") +
+  xlim(0, 100) +
+  ylim(0, 8) +
+  theme_bw()
+```
+
+```{r warning=FALSE, echo=FALSE}
+rcorr(as.matrix(Module_10_Lab_Data), type = "pearson")
+```
