@@ -11,6 +11,7 @@ output:
 mainfont: Times New Roman
 ---
 
+
 ```{r setupChunk, warning=FALSE, include=FALSE}
 library(tidyverse)
 library(extrafont)
@@ -120,9 +121,9 @@ nonexistent negative correlation between both variables. The p-value for
 this test was \(0.0055\), showing this result to likely be statistically
 insignificant.
 
-Lastly, for \(R^2\), the result was 0.0131723. This shows a the that the
-model visible from the trend line in figure 1 is a poor predictor and
-does not explain and predict the variability observed.
+Lastly, for \(R^2\), the result was 0.0131723. This shows that the model 
+visible from the trend line in figure 1 is a poor predictor and does not 
+explain and predict the variability observed.
 
 ### Section 5: Discussion and Conclusion
 
@@ -133,7 +134,7 @@ It stands to reason the null is accepted and H~1~ is rejected.
 
 ### Section 6: Graphics and Visuals
 
-```{r graph, warning=FALSE, echo=FALSE, fig.cap="Scatter plot with trend line. Age and income of respondents."}
+```{r graph, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with trend line. Age and income of respondents."}
 graphdata <- as.data.frame(Module_10_Lab_Data)
 
 ggplot(data = graphdata, aes(x = Age,y = `Income Interval`)) +
@@ -144,7 +145,7 @@ ggplot(data = graphdata, aes(x = Age,y = `Income Interval`)) +
   theme_bw()
 ```
 
-```{r rcorr, warning=FALSE, echo=FALSE}
+```{r rcorr, echo=FALSE, warning=FALSE,}
 rcorr(as.matrix(Module_10_Lab_Data), type = "pearson")
 ```
 
