@@ -17,6 +17,9 @@ library(viridis)
 
 library(readxl)
 Final_Exam_Data <- read_excel("data/Final Exam Data.xlsx", 
-                              col_types = c("numeric", "numeric", "numeric", 
-                                            "numeric", "numeric", "numeric", 
+                              col_types = c("numeric", "numeric",
+                                            "numeric", "numeric",
+                                            "numeric", "numeric", 
                                             "numeric", "numeric"))
+
+summary(Final_Exam_Data)

@@ -3,7 +3,6 @@ title: "Lab 6 Report"
 author: "Christopher Byrd"
 date: "11/10/2024"
 output:
-  html_document: default
   pdf_document: default
 ---
 
@@ -40,7 +39,7 @@ prayers in the US and other countries.\
 average income than individuals in other countries.
 
 > H~0~: USA~Income~ = World~Income~\
-> H~1~: USA~Income~ > USA~Income~
+> H~1~: USA~Income~ > World~Income~
 
 ### Section 2: Data
 

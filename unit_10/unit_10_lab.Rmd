@@ -118,19 +118,17 @@ identical to Income-Age for r and \(R^2\).
 
 As for the results, Pearson's r is \(-0.11\), showing a weak to 
 nonexistent negative correlation between both variables. The p-value for 
-this test was \(0.0055\), showing this result to likely be statistically
-insignificant.
+this test was \(0.0055\), showing this is statistically significant.
 
 Lastly, for \(R^2\), the result was 0.0131723. This shows that the model 
 visible from the trend line in figure 1 is a poor predictor and does not 
-explain and predict the variability observed.
+explain and predict the variability observed well.
 
 ### Section 5: Discussion and Conclusion
 
-From these results, it's clear that age has little to no impact on
-income.
+From these results, there is a weak, indirect relationship
 
-It stands to reason the null is accepted and H~1~ is rejected.
+It stands to reason the null is rejected and H~1~ is accepted.
 
 ### Section 6: Graphics and Visuals
 
