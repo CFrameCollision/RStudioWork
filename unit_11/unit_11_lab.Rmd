@@ -1,0 +1,118 @@
+---
+title: "Unit 11 Lab Report"
+author: "Christopher Byrd"
+date: "`r Sys.Date()`"
+output: pdf_document
+    latex_engine: lualatex
+    highlight: pygments
+    toc: true
+    toc_depth: 3
+mainfont: Times New Roman
+---
+
+```{r setupChunk, warning=FALSE, include=FALSE}
+library(tidyverse)
+library(extrafont)
+library(ggplot2)
+library(ggthemes)
+library(hrbrthemes)
+library(thematic)
+library(extrafontdb)
+library(readxl)
+library(colorspace)
+library(addinslist)
+library(clipr)
+library(gmodels)
+library(Hmisc)
+library(RColorBrewer)
+library(DescTools)
+library(viridis)
+
+Module_11_Lab_Data <- read_excel("data/Module 11 Lab Data.xlsx", 
+                                 col_types = c("numeric", "numeric",
+                                               "numeric", "numeric"))
+```
+
+### Section 1: Hypothesis
+
+The goal of this research paper is to determine how age, income, and 
+regular attendance of church services affects prayer rates.
+
+> Null: There is no significant correlation between age of those who
+> pray regularly and their income, age, and church attendance.\
+> Research~1~: There is a significant correlation between age of those 
+> who pray regularly and their income, age, and church attendance.
+
+> H~0~: ρ~xy~ = 0\
+> H~1~: r~xy~ ≠ 0
+
+\newpage
+### Section 2: Data
+
+The data being utilized is from the Baylor Survey of Religious Life.
+Participants asked to respond to the question listed in the following 
+code book:
+
+| Question or Description    |        Possible Answers           |
+|----------------------------|-----------------------------------|
+| Age range of people who    | Range: 17-95                      |
+| pray once or several times |                                   |
+| a day as reported in 2017. |                                   |
+|--------------------------- |-----------------------------------|
+| By your best estimate,     | 1) $10,000 or less                |
+| what was your total        | 2) $10,001 to $20,000             |
+| household income last year,| 3) $20,001 to $35,000             |
+| before taxes?              | 4) $35,001 to $50,000             |
+|                            | 5) $50,001 to $100,000            |
+|                            | 6) $100,001 to $150,000           |
+|                            | 7) $150,001 or more               |
+|----------------------------|-----------------------------------|
+| About how often do you     | 0) Never                          |
+| spend time alone praying   | 1) Only on certain occasions      |
+| outside of religious       | 2) Once a week or less            |
+| services?                  | 3) A few times a week             |
+|                            | 4) Once a day                     |
+|                            | 5) Several times a day            |
+|----------------------------|-----------------------------------|
+| Attends a worship service  | 1) No                             |
+| about once a week or more. | 2) Yes                            |
+
+Attendance was originally a nominal variable. To allow for a linear 
+regression, it was recoded as a dummy variable.
+
+### Section 3: Method
+
+To evaluate the data, the dataset was first re-coded with shorter 
+variable names, mainly because of my hate for long variable names. The
+new dataset was then coerced to be a `data.frame` to make later
+actions easier (particularly with `ggplot2`, since data needs to be in 
+tidy format).
+
+```{r warning=FALSE, results='hide', eval=FALSE}
+# Re-coded with shorter names because idk I don't like long variable
+# names. ¯\_(ツ)_/¯
+
+pf <- Module_11_Lab_Data$`Pray Frequency`
+inc <- Module_11_Lab_Data$`Income Intervals`
+age <- Module_11_Lab_Data$AGE
+regat <- Module_11_Lab_Data$`Regular Attendance`
+
+df <- data.frame(pf, inc, age, regat)
+```
+
+### Section 4: Results
+
+
+
+### Section 5: Discussion and Conclusion
+
+
+
+### Section 6: Graphics and Visuals
+
+```{r graph, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon fitted values."}
+```
+
+\begin{center}
+Figure 3: Matrix chart. \(r^2\) of age and income interval.
+\end{center}
