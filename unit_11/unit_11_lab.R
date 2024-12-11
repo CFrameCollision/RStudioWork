@@ -41,10 +41,15 @@ lmresult <- lm(formula = pf ~ inc + age + regpr, df)
 for (i in 1:length(lmresult$coefficients)) {
   if (lmresult$coefficients[i] > 0) {
     print(paste("The coefficient for", names(lmresult$coefficients[i]),
-          "is", lmresult$coefficients[i], "and direct"))
-}   else {
+                "is", lmresult$coefficients[i], "and direct"))
+  }   else {
     print(paste("The coefficient for", names(lmresult$coefficients[i]),
-              "is", lmresult$coefficients[i], "and indirect"))
+                "is", lmresult$coefficients[i], "and indirect"))
+  }
+  if (abs(lmresult$coefficients[i]) > 0.2) {
+    print("There is a weak to strong relationship.")
+  }   else {
+    print("There is little to no relationship")
   }
 }
 

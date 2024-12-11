@@ -2,7 +2,8 @@
 title: "Unit 11 Lab Report"
 author: "Christopher Byrd"
 date: "`r Sys.Date()`"
-output: pdf_document
+output:
+  pdf_document:
     latex_engine: lualatex
     highlight: pygments
     toc: true
@@ -82,13 +83,13 @@ regression, it was recoded as a dummy variable.
 
 ### Section 3: Method
 
-To evaluate the data, the dataset was first re-coded with shorter 
+To evaluate the data, the data set was first re-coded with shorter 
 variable names, mainly because of my hate for long variable names. The
-new dataset was then coerced to be a `data.frame` to make later
+new data set was then coerced to be a `data.frame` to make later
 actions easier (particularly with `ggplot2`, since data needs to be in 
 tidy format).
 
-```{r warning=FALSE, results='hide', eval=FALSE}
+```{r warning=FALSE, results='hide', eval=TRUE}
 # Re-coded with shorter names because idk I don't like long variable
 # names. ¯\_(ツ)_/¯
 
@@ -98,6 +99,43 @@ age <- Module_11_Lab_Data$AGE
 regat <- Module_11_Lab_Data$`Regular Attendance`
 
 df <- data.frame(pf, inc, age, regat)
+```
+
+The next evaluation consisted of finding the median of income interval,
+age, and regular attendance. To cut down on the amount of code I needed
+to write, I made this a `for` loop. From here, the linear model (AKA 
+regression) was calculated with prayer frequency regressed over income
+interval, age, and regular attendance of church services.
+
+```{r warning=FALSE, results='hide', eval=FALSE}
+for (i in 2:4) {
+  print(paste(median(df[[i]])))
+}
+
+lmresult <- lm(formula = pf ~ inc + age + regpr, df)
+```
+
+After running a summary to find the exact results of the `lm()`, a
+ggplot2 plot was created based upon the fitted values.
+
+I did all this work below thinking I was working with Pearson's r, but
+I wasn't. I just put it here to display the work I put into this.
+
+```{r eval=FALSE, warning=FALSE, results='hide'}
+for (i in 1:length(lmresult$coefficients)) {
+  if (lmresult$coefficients[i] > 0) {
+    print(paste("The coefficient for", names(lmresult$coefficients[i]),
+                "is", lmresult$coefficients[i], "and direct"))
+  }   else {
+    print(paste("The coefficient for", names(lmresult$coefficients[i]),
+                "is", lmresult$coefficients[i], "and indirect"))
+  }
+  if (abs(lmresult$coefficients[i]) > 0.2) {
+    print("There is a weak to strong relationship.")
+  }   else {
+    print("There is little to no relationship")
+  }
+}
 ```
 
 ### Section 4: Results
