@@ -28,6 +28,7 @@ library(Hmisc)
 library(RColorBrewer)
 library(DescTools)
 library(viridis)
+library(ggpmisc)
 
 Module_11_Lab_Data <- read_excel("data/Module 11 Lab Data.xlsx", 
                                  col_types = c("numeric", "numeric",
@@ -39,13 +40,16 @@ Module_11_Lab_Data <- read_excel("data/Module 11 Lab Data.xlsx",
 The goal of this research paper is to determine how age, income, and 
 regular attendance of church services affects prayer rates.
 
-> Null: There is no significant correlation between age of those who
-> pray regularly and their income, age, and church attendance.\
-> Research~1~: There is a significant correlation between age of those 
-> who pray regularly and their income, age, and church attendance.
+> Null: There will be no significant difference in prayer frequency
+> based upon age, income range, or church attendance\
+> Research~1~: There will be a significant difference in prayer 
+> frequency based upon age, income range, or church attendance.\
+> Research~2~: Median age, income range, and church attendance will 
+> result in a prayer rate of a few times a week.
 
 > H~0~: ρ~xy~ = 0\
-> H~1~: r~xy~ ≠ 0
+> H~1~: r~xy~ ≠ 0\
+> H~2~: Y~x_median~ = 3
 
 \newpage
 ### Section 2: Data
@@ -105,7 +109,9 @@ The next evaluation consisted of finding the median of income interval,
 age, and regular attendance. To cut down on the amount of code I needed
 to write, I made this a `for` loop. From here, the linear model (AKA 
 regression) was calculated with prayer frequency regressed over income
-interval, age, and regular attendance of church services.
+interval, age, and regular attendance of church services. A multiple 
+regression was utilized to show how each variable interacts with prayer 
+frequency together.
 
 ```{r warning=FALSE, results='hide', eval=FALSE}
 for (i in 2:4) {
@@ -118,8 +124,28 @@ lmresult <- lm(formula = pf ~ inc + age + regpr, df)
 After running a summary to find the exact results of the `lm()`, a
 ggplot2 plot was created based upon the fitted values.
 
-I did all this work below thinking I was working with Pearson's r, but
-I wasn't. I just put it here to display the work I put into this.
+```{r warning=FALSE, results='hide', eval=FALSE}
+df$fitted <- lmresult$fitted.values
+df$residuals <- lmresult$residuals
+
+ggplot(df, aes(x = fitted, y = pf)) +
+  geom_point() +
+  geom_smooth(method = 'lm', color = '#679df5') +
+  labs(title = "Prayer Frequency Based Upon Fitted Values") +
+  xlab("Fitted values (see section 2-4 for more info)") +
+  ylab("Prayer Frequency") +
+  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
+  theme_pander() +
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt")) +
+  geom_point(aes(x = x_value, y = y_value), color = "red", size = 2.2) +
+  geom_text(aes(x = x_value, y = y_value,
+                label = paste("(", round(x_value, 2), ", ",
+                              round(y_value, 2), ")", sep = "")),
+            vjust = -1, hjust = 1, size = 3.2)
+```
+
+I completed the work below thinking I was working with Pearson's r, which
+I wasn't. I've placed it here to display the work I put into it:
 
 ```{r eval=FALSE, warning=FALSE, results='hide'}
 for (i in 1:length(lmresult$coefficients)) {
@@ -140,17 +166,71 @@ for (i in 1:length(lmresult$coefficients)) {
 
 ### Section 4: Results
 
+Full results can be found in figure 2 within section 6. Figure 2 shows that
+each individual independent variable is statistically significant in relation
+to how they affect the dependent. Furthermore, regular prayer and age display
+positive relationships, while income displays a negative relationship. Regular
+prayer is the largest predictor and the most statistically significant, at
+a p-value of \(2E-16\).
 
+Medians for the 3 dependent variables are as follows:
+
+```{r median, echo=FALSE, warning=FALSE, results='markup'}
+for (i in 2:4) {
+  print(paste(median(df[[i]])))
+}
+```
+
+...while median for the fitted values is *2.241326*, based upon the following string: `median(df$fitted)`. To find the median of prayer frequency, the 
+following code snippet was used:
+
+```{r, echo=TRUE, warning=FALSE}
+x_value <- 2.241326
+y_value <- (2.72e-14) + 1 * x_value
+print(y_value)
+```
+
+As is shown, the value is 2.24, which, when rounded, means median prayer 
+frequency falls within once a week or less. Fitted values are plotted in
+figure 1.
 
 ### Section 5: Discussion and Conclusion
 
-
+From these results, the null is rejected and research~1~ is accepted.
+Research~2~ is rejected, as the actual value of Y is 2. 
+\newpage
 
 ### Section 6: Graphics and Visuals
 
-```{r graph, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon fitted values."}
+```{r graph, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon fitted values. Median value of x labeled."}
+lmresult <- lm(formula = pf ~ inc + age + regat, df)
+
+df$fitted <- lmresult$fitted.values
+df$residuals <- lmresult$residuals
+
+x_value <- 2.241326
+y_value <- (2.72e-14) + 1 * x_value
+
+ggplot(df, aes(x = fitted, y = pf)) +
+  geom_point() +
+  geom_smooth(method = 'lm', color = '#679df5') +
+  labs(title = "Prayer Frequency Based Upon Fitted Values") +
+  xlab("Fitted values (see section 2-4 for more info)") +
+  ylab("Prayer Frequency") +
+  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
+  theme_pander() +
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt")) +
+  geom_point(aes(x = x_value, y = y_value), color = "red", size = 2.2) +
+  geom_text(aes(x = x_value, y = y_value,
+                label = paste("(", round(x_value, 2), ", ",
+                              round(y_value, 2), ")", sep = "")),
+            vjust = -1, hjust = 1, size = 3.2)
+```
+
+```{r Regression Table, echo=FALSE, warning=FALSE, results='hold'}
+summary(lmresult)
 ```
 
 \begin{center}
-Figure 3: Matrix chart. \(r^2\) of age and income interval.
+Figure 2: Regression Table. Test statistics included.
 \end{center}

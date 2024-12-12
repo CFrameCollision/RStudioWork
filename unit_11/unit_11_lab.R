@@ -14,6 +14,7 @@ library(Hmisc)
 library(RColorBrewer)
 library(DescTools)
 library(viridis)
+library(ggpmisc)
 
 Module_11_Lab_Data <- read_excel("data/Module 11 Lab Data.xlsx", 
                                  col_types = c("numeric", "numeric",
@@ -33,7 +34,7 @@ for (i in 2:4) {
   print(paste(median(df[[i]])))
 }
 
-lmresult <- lm(formula = pf ~ inc + age + regpr, df)
+lmresult <- lm(formula = pf ~ inc + age + regat, df)
 
 # Testing automating certain analysis's so I can quickly look through
 # output.
@@ -57,8 +58,16 @@ for (i in 1:length(lmresult$coefficients)) {
 
 summary(lmresult)
 
+testThing <- summary(lmresult)
+print(paste("The R^2 value is", testThing[["adj.r.squared"]]))
+
 df$fitted <- lmresult$fitted.values
 df$residuals <- lmresult$residuals
+
+median(df$fitted)
+
+x_value <- 2.241326
+y_value <- (2.72e-14) + 1 * x_value
 
 ggplot(df, aes(x = fitted, y = pf)) +
   geom_point() +
@@ -66,5 +75,11 @@ ggplot(df, aes(x = fitted, y = pf)) +
   labs(title = "Prayer Frequency Based Upon Fitted Values") +
   xlab("Fitted values (see section 2-4 for more info)") +
   ylab("Prayer Frequency") +
+  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
   theme_pander() +
-  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt"))
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt")) +
+  geom_point(aes(x = x_value, y = y_value), color = "red", size = 2.2) +
+  geom_text(aes(x = x_value, y = y_value,
+                label = paste("(", round(x_value, 2), ", ",
+                              round(y_value, 2), ")", sep = "")),
+            vjust = -1, hjust = 1, size = 3.2)
