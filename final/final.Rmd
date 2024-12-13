@@ -1,0 +1,156 @@
+---
+title: "Final Project"
+author: "Christopher Byrd"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: lualatex
+    highlight: pygments
+    toc: true
+    toc_depth: 3
+mainfont: Times New Roman
+---
+
+```{r setupChunk, warning=FALSE, include=FALSE}
+# The Task: Download the Final Exam Data. Using any inferential statistics from Modules 6 through 11, write a research report telling the story of two or more of these data. You do not have to use all eight variables. You only have to use variables that fit your research question and hypotheses.
+
+# Make sure you (1) include all the sections of the analytical report as well as (2) include and (3) reference a visual representation of these data (e.g., table, chart, plot, graph, etc.)
+
+library(tidyverse)
+library(extrafont)
+library(ggplot2)
+library(ggthemes)
+library(hrbrthemes)
+library(thematic)
+library(extrafontdb)
+library(readxl)
+library(colorspace)
+library(addinslist)
+library(clipr)
+library(gmodels)
+library(Hmisc)
+library(RColorBrewer)
+library(DescTools)
+library(viridis)
+library(ggpmisc)
+
+Final_Exam_Data <- read_excel("data/Final Exam Data.xlsx", 
+                              col_types = c("numeric", "numeric",
+                                            "numeric", "numeric",
+                                            "numeric", "numeric",
+                                            "numeric", "numeric"))
+```
+
+### Section 1: Hypothesis
+
+The goal of this research paper is to determine how attendance of church and gender affects opinion on seperation of church and state.
+
+> Null~1~: There will be no significant difference in opinion on church and
+> state seperation based upon sex.\
+> Research~1~: There will be a significant difference in opinion on church and
+> state seperation based upon sex.\
+> Null~2~: There will be no significant difference in opinion on church and
+> state seperation based upon church attendance.\
+> Research~2~: There will be a significant difference in opinion on church and
+> state seperation based upon church attendance.\
+> Null~3~: There will be no significant difference in opinion on church and
+> state seperation based upon sex and church attendance.\
+> Research~3~: There will be a significant difference in opinion on church 
+> and state seperation based upon sex and church attendance.\
+
+\newpage
+### Section 2: Data
+
+The data being utilized is from the Baylor Survey of Religious Life .
+Participants asked to respond to the question listed in the following
+code book:
+
+| Question or Description    |        Possible Answers           |
+|----------------------------|-----------------------------------|
+| What is your preferred     | 1) Female                         |
+| gender?                    | 2) Male                           |
+|----------------------------|-----------------------------------|
+| The federal government     | 1) Strongly Disagree              |
+| should enforce strict      | 2) Disagree                       |
+| separation of church and   | 3) Agree                          |
+| state.                     | 4) Strongly Agree                 |
+|                            | 5) Undecided                      |
+|----------------------------|-----------------------------------|
+| How often do you attend    | 1) Never                          |
+| religious services at a    | 2) Less than once a year          |
+| place of worship?          | 3) Once or twice a year           |
+|                            | 4) Several times a year           |
+|                            | 5)Once a month                    |
+|                            | 6) 2 to 3 times a month           |
+|                            | 6) About once a week              |
+|                            | 8) Several times a week           |
+
+### Section 3: Method
+
+
+```{r eval=FALSE, warning=FALSE, results='hide'}
+
+```
+
+### Section 4: Results
+
+
+```{r median, echo=FALSE, warning=FALSE, results='markup'}
+for (i in 2:4) {
+  print(paste(median(df[[i]])))
+}
+```
+
+...while median for the fitted values is *2.241326*, based upon the following string: `median(df$fitted)`. To find the median of prayer frequency, the 
+following code snippet was used:
+
+```{r, echo=TRUE, warning=FALSE}
+x_value <- 2.241326
+y_value <- (2.72e-14) + 1 * x_value
+print(y_value)
+```
+
+As is shown, the value is 2.24, which, when rounded, means median prayer 
+frequency falls within once a week or less. Fitted values are plotted in
+figure 1.
+
+### Section 5: Discussion and Conclusion
+
+From these results, the null is rejected and research~1~ is accepted.
+Research~2~ is rejected, as the actual value of Y is 2. 
+\newpage
+
+### Section 6: Graphics and Visuals
+
+```{r graph, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon fitted values. Median value of x labeled."}
+lmresult <- lm(formula = pf ~ inc + age + regat, df)
+
+df$fitted <- lmresult$fitted.values
+df$residuals <- lmresult$residuals
+
+x_value <- 2.241326
+y_value <- (2.72e-14) + 1 * x_value
+
+ggplot(df, aes(x = fitted, y = pf)) +
+  geom_point() +
+  geom_smooth(method = 'lm', color = '#679df5') +
+  labs(title = "Prayer Frequency Based Upon Fitted Values") +
+  xlab("Fitted values (see section 2-4 for more info)") +
+  ylab("Prayer Frequency") +
+  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
+  theme_pander() +
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt")) +
+  geom_point(aes(x = x_value, y = y_value), color = "red", size = 2.2) +
+  geom_text(aes(x = x_value, y = y_value,
+                label = paste("(", round(x_value, 2), ", ",
+                              round(y_value, 2), ")", sep = "")),
+            vjust = -1, hjust = 1, size = 3.2)
+```
+
+```{r Regression Table, echo=FALSE, warning=FALSE, results='hold'}
+summary(lmresult)
+```
+
+\begin{center}
+Figure 2: Regression Table. Test statistics included.
+\end{center}
