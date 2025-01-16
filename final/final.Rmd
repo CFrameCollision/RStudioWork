@@ -4,10 +4,13 @@ author: "Christopher Byrd"
 date: "`r Sys.Date()`"
 output:
   pdf_document:
+    fig_caption: yes        
+    includes:  
+      in_header: my_header.tex
     latex_engine: lualatex
     highlight: pygments
     toc: true
-    toc_depth: 3
+    toc_depth: 5
 mainfont: Times New Roman
 ---
 
@@ -39,6 +42,14 @@ Final_Exam_Data <- read_excel("data/Final Exam Data.xlsx",
                                             "numeric", "numeric",
                                             "numeric", "numeric",
                                             "numeric", "numeric"))
+
+churchState <- Final_Exam_Data$`Church and State`
+attendance <- Final_Exam_Data$`Attendance Intervals 2017`
+sex <- Final_Exam_Data$Sex
+
+df <- data.frame(sex, churchState, attendance)
+
+dfs <- subset(df, churchState != 8)
 ```
 
 ### Section 1: Hypothesis
@@ -49,16 +60,20 @@ The goal of this research paper is to determine how attendance of church and gen
 > state seperation based upon sex.\
 > Research~1~: There will be a significant difference in opinion on church and
 > state seperation based upon sex.\
+
 > Null~2~: There will be no significant difference in opinion on church and
 > state seperation based upon church attendance.\
 > Research~2~: There will be a significant difference in opinion on church and
 > state seperation based upon church attendance.\
+
 > Null~3~: There will be no significant difference in opinion on church and
 > state seperation based upon sex and church attendance.\
 > Research~3~: There will be a significant difference in opinion on church 
 > and state seperation based upon sex and church attendance.\
 
-\newpage
+I got a little carried away on this. Sorry Dr. K!
+
+
 ### Section 2: Data
 
 The data being utilized is from the Baylor Survey of Religious Life .
@@ -74,83 +89,288 @@ code book:
 | should enforce strict      | 2) Disagree                       |
 | separation of church and   | 3) Agree                          |
 | state.                     | 4) Strongly Agree                 |
-|                            | 5) Undecided                      |
+|                            | 8) Undecided*                     |
 |----------------------------|-----------------------------------|
 | How often do you attend    | 1) Never                          |
 | religious services at a    | 2) Less than once a year          |
 | place of worship?          | 3) Once or twice a year           |
 |                            | 4) Several times a year           |
-|                            | 5)Once a month                    |
+|                            | 5) Once a month                   |
 |                            | 6) 2 to 3 times a month           |
-|                            | 6) About once a week              |
-|                            | 8) Several times a week           |
+|                            | 7) About once a week              |
+|                            | 8) Several times a week**         |
+
+*Note: The original code book says 5 is undecided. This is incorrect.\
+**Note: No responses were recorded.
 
 ### Section 3: Method
 
+To evaluate the data, an analysis  of variance (ANOVA) was calculated to see
+where variance might lie in the model and whether said variance was 
+significant.
 
 ```{r eval=FALSE, warning=FALSE, results='hide'}
-
+aovResults <- aov(formula = churchState ~ sex + attendance, df)
+anova(aovResults)
 ```
+
+Next, I ran `cor()` to determine Pearson's r and see where correlation lies
+within the variables. I indexed 1:3 as to avoid running `cor()` on fitted
+values and residuals from `lm()`, as they are also contained within the `df`.
+This is only necessary when running the test a second time after starting up
+an R instance.
+
+```{r eval=FALSE, warning=FALSE, results='hide'}
+cor(df[1:3])
+```
+
+Following this, a linear model was calculated as church and state opinion
+regressed upon sex and attendance.
+
+```{r eval=FALSE, warning=FALSE, results='hide'}
+lmresult <- lm(formula = churchState ~ sex + attendance, df)
+summary(lmresult)
+```
+
+After this, I created 3 graphs, with the regression for sex and attendance
+depicted below. An individual graph for church and state regressed upon sex
+and attendance separately are included.
+
+```{r eval=FALSE, warning=FALSE, results='hide'}
+ggplot(df, aes(x = fitted, y = churchState)) +
+  geom_count()+
+  scale_size_area()+
+  geom_smooth(method = 'lm', color = '#679df5') +
+  labs(title = "Opinion on Seperation of Church & State\
+       Based Upon Fitted Values") +
+  xlab("Fitted values (see section 2-4 for more info)") +
+  ylab("Opinion on Seperation of Church & State") +
+  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
+  theme_pander() +
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt"))
+```
+
+Lastly, I performed all these analyses a second time, this time omitting
+the response \(8\) for church and state from the tests. Responses of 8 only
+make up \(6.5%\) of responses and cause a noticeable skew to the mean in the
+way they are encoded. More explanation will be provided in section 5.
 
 ### Section 4: Results
 
+Results are as follows and are broken up by inclusion or omission of
+undecided responses.
 
-```{r median, echo=FALSE, warning=FALSE, results='markup'}
-for (i in 2:4) {
-  print(paste(median(df[[i]])))
-}
-```
+#### Section 4.1: With Undecided
 
-...while median for the fitted values is *2.241326*, based upon the following string: `median(df$fitted)`. To find the median of prayer frequency, the 
-following code snippet was used:
+Discussed first are tables 1 and 2. When regressed upon sex and attendance, our ANOVA shows statistically significant variation in the model caused by attendance, but not sex. Pearson's r demonstrates an extremely weak, indirect correlation between church and state when considering sex or attendance.
 
-```{r, echo=TRUE, warning=FALSE}
-x_value <- 2.241326
-y_value <- (2.72e-14) + 1 * x_value
-print(y_value)
-```
+Moving to the linear regression, table 3 shows only attendance is a significant predictor within the model when both sex and attendance are considered.
 
-As is shown, the value is 2.24, which, when rounded, means median prayer 
-frequency falls within once a week or less. Fitted values are plotted in
-figure 1.
+Next, tables 4 and 5 are discussed, where each individual independent variable is regressed. When only attendance is considered, the results are identically significant. When sex is considered alone, it swaps from having a weak direct relationship to having a weak indirect relationship. This indirect relationship is still insignificant.
+
+Tables 3-5 are represented graphically in figures 1 through 3.
+
+#### Section 4.2: With Undecided Omitted
+
+Discussed next are tables 6 and 7. When regressed upon sex and attendance, our ANOVA shows statistically significant variation in the model caused by both independent variables. Pearson's r demonstrates a weak, indirect correlation between church and state when considering sex, and a moderate indirect relationship when considering attendance.
+
+Moving to the linear regression, table 8 shows both variables are significant predictors within the model when both sex and attendance are considered.
+
+Next, tables 9 and 10 are discussed, where each individual independent variable is regressed. When only attendance is considered, the results are identically significant. When sex is considered alone, it's indirect relationship moderately increases in strength, but becomes more significant.
+
+Tables 8-10 are represented graphically in figures 4 through 6.
 
 ### Section 5: Discussion and Conclusion
 
-From these results, the null is rejected and research~1~ is accepted.
-Research~2~ is rejected, as the actual value of Y is 2. 
-\newpage
+From these results, when considering undecided responses, we can accept Null~1~, Research~2~, and Research~3~. Thus, the converses are rejected.
+
+When undecided responses are omitted, we can accept Research~1~, Research~2~, and Research~3~ while rejecting their corresponding null hypotheses.
+
+As to why I decided to run my analyses twice, I was curious how the undecided results affected the overall picture. The answer is quite significantly. They skewed both strength of correlation and correlation direction. I think coding them as an 8 was not the best idea, since this introduces a larger difference in mean than if they had been coded as a number "closer to the pack".
 
 ### Section 6: Graphics and Visuals
+#### Section 6.1: Visuals Containing Undecided
+##### Section 6.1.1: Tables
 
-```{r graph, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon fitted values. Median value of x labeled."}
-lmresult <- lm(formula = pf ~ inc + age + regat, df)
+```{r, echo=FALSE, warning=FALSE, results='markup'}
+aovResults <- aov(formula = churchState ~ sex + attendance, df)
+anova(aovResults)
+```
+
+\begin{center}
+Table 1: ANOVA table.
+\end{center}
+
+```{r, echo=FALSE, warning=FALSE, results='markup'}
+cor(df[1:3])
+```
+
+\begin{center}
+Table 2: Correlation matrix with Pearson's r.
+\end{center}
+
+```{r, echo=FALSE, warning=FALSE, results='markup'}
+lmresult <- lm(formula = churchState ~ sex + attendance, df)
+summary(lmresult)
 
 df$fitted <- lmresult$fitted.values
 df$residuals <- lmresult$residuals
-
-x_value <- 2.241326
-y_value <- (2.72e-14) + 1 * x_value
-
-ggplot(df, aes(x = fitted, y = pf)) +
-  geom_point() +
-  geom_smooth(method = 'lm', color = '#679df5') +
-  labs(title = "Prayer Frequency Based Upon Fitted Values") +
-  xlab("Fitted values (see section 2-4 for more info)") +
-  ylab("Prayer Frequency") +
-  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
-  theme_pander() +
-  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt")) +
-  geom_point(aes(x = x_value, y = y_value), color = "red", size = 2.2) +
-  geom_text(aes(x = x_value, y = y_value,
-                label = paste("(", round(x_value, 2), ", ",
-                              round(y_value, 2), ")", sep = "")),
-            vjust = -1, hjust = 1, size = 3.2)
 ```
 
-```{r Regression Table, echo=FALSE, warning=FALSE, results='hold'}
+\begin{center}
+Table 3: Linear regression based upon fitted values.
+\end{center}
+
+```{r, echo=FALSE, warning=FALSE, results='markup'}
+lmresult <- lm(formula = churchState ~ attendance, df)
 summary(lmresult)
 ```
 
 \begin{center}
-Figure 2: Regression Table. Test statistics included.
+Table 4: Linear regression based upon church attendance.
 \end{center}
+
+```{r, echo=FALSE, warning=FALSE, results='markup'}
+lmresult <- lm(formula = churchState ~ sex, df)
+summary(lmresult)
+```
+
+\begin{center}
+Table 5: Linear regression based upon sex.
+\end{center}
+
+##### Section 6.1.2: Graphs
+
+```{r graph, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon fitted values."}
+ggplot(df, aes(x = fitted, y = churchState)) +
+  geom_count()+
+  scale_size_area()+
+  geom_smooth(method = 'lm', color = '#679df5') +
+  labs(title = "Opinion on Seperation of Church & State\
+       Based Upon Fitted Values") +
+  xlab("Fitted values (see section 2-4 for more info)") +
+  ylab("Opinion on Seperation of Church & State") +
+  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
+  theme_pander() +
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt"))
+```
+
+```{r graph1, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon attendance."}
+ggplot(df, aes(x = attendance, y = churchState))+
+  geom_count()+
+  scale_size_area()+
+  geom_smooth(method = 'lm', color = '#679df5') +
+  labs(title = "Opinion on Seperation of Church & State\
+       Based Upon attendance") +
+  xlab("Attendance") +
+  ylab("Opinion on Seperation of Church & State") +
+  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
+  theme_pander() +
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt"))
+```
+
+```{r graph2, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon sex"}
+ggplot(df, aes(x = sex, y = churchState))+
+  geom_count()+
+  scale_size_area()+
+  geom_smooth(method = 'lm', color = '#679df5') +
+  labs(title = "Opinion on Seperation of Church & State\
+       Based Upon Sex") +
+  xlab("Sex") +
+  ylab("Opinion on Seperation of Church & State") +
+  theme_pander() +
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt"))
+```
+
+#### Section 6.2: Visuals with Undecided Omitted
+##### Section 6.2.1: Tables
+
+```{r, echo=FALSE, warning=FALSE, results='markup'}
+aovResults <- aov(formula = churchState ~ sex + attendance, dfs)
+anova(aovResults)
+```
+
+\begin{center}
+Table 6: ANOVA table.
+\end{center}
+
+```{r, echo=FALSE, warning=FALSE, results='markup'}
+cor(dfs[1:3])
+```
+
+\begin{center}
+Table 7: Correlation matrix with Pearson's r.
+\end{center}
+
+```{r, echo=FALSE, warning=FALSE, results='markup'}
+lmresult <- lm(formula = churchState ~ sex + attendance, dfs)
+summary(lmresult)
+
+dfs$fitted <- lmresult$fitted.values
+dfs$residuals <- lmresult$residuals
+```
+
+\begin{center}
+Table 8: Linear regression based upon fitted values.
+\end{center}
+
+```{r, echo=FALSE, warning=FALSE, results='markup'}
+lmresult <- lm(formula = churchState ~ attendance, dfs)
+summary(lmresult)
+```
+
+\begin{center}
+Table 9: Linear regression based upon church attendance.
+\end{center}
+
+```{r, echo=FALSE, warning=FALSE, results='markup'}
+lmresult <- lm(formula = churchState ~ sex, dfs)
+summary(lmresult)
+```
+
+\begin{center}
+Table 10: Linear regression based upon sex.
+\end{center}
+
+##### Section 6.2.2: Graphs
+
+```{r graph3, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon fitted values."}
+ggplot(dfs, aes(x = fitted, y = churchState)) +
+  geom_count()+
+  scale_size_area()+
+  geom_smooth(method = 'lm', color = '#679df5') +
+  labs(title = "Opinion on Seperation of Church & State\
+       Based Upon Fitted Values") +
+  xlab("Fitted values (see section 2-4 for more info)") +
+  ylab("Opinion on Seperation of Church & State") +
+  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
+  theme_pander() +
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt"))
+```
+
+```{r graph4, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon attendance."}
+ggplot(dfs, aes(x = attendance, y = churchState))+
+  geom_count()+
+  scale_size_area()+
+  geom_smooth(method = 'lm', color = '#679df5') +
+  labs(title = "Opinion on Seperation of Church & State\
+       Based Upon attendance") +
+  xlab("Attendance") +
+  ylab("Opinion on Seperation of Church & State") +
+  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
+  theme_pander() +
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt"))
+```
+
+```{r graph5, warning=FALSE, echo=FALSE, results='hide', fig.cap="Scatter plot with linear regression based upon sex"}
+ggplot(dfs, aes(x = sex, y = churchState))+
+  geom_count()+
+  scale_size_area()+
+  geom_smooth(method = 'lm', color = '#679df5') +
+  labs(title = "Opinion on Seperation of Church & State\
+       Based Upon Sex") +
+  xlab("Sex") +
+  ylab("Opinion on Seperation of Church & State") +
+  theme_pander() +
+  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt"))
+```
