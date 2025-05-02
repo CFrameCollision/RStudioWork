@@ -1,10 +1,24 @@
 # Run "./data/new_data97-educational-data/new_data97-educational-data.R" and
 # analysis.R first.
 
-library(dplyr)
-library(ggplot2)
+library(tidyverse)
+library(extrafont)
+library(ggthemes)
+library(hrbrthemes)
+library(thematic)
+library(extrafontdb)
+library(colorspace)
+library(addinslist)
+library(clipr)
+library(gmodels)
+library(Hmisc)
+library(RColorBrewer)
+library(DescTools)
+library(viridis)
+library(ggpmisc)
 library(naniar)
 library(survey)
+library(broom)
 
 # Looking at missing-ness by race/ethnicity
 new_data_rmNA %>%
@@ -20,6 +34,8 @@ new_data_rmNA %>%
     dad_missing_pct = mean(dad_missing) * 100
   )
 
+# Testing for patterns in missing-ness
+
 gg_miss_upset(new_data_rmNA)
 
 mcar_data <- new_data_rmNA %>%
@@ -29,6 +45,8 @@ mcar_data <- new_data_rmNA %>%
 
 mcar_test(new_data_rmNA)
 
+# Does multiple imputations 
+
 library(mice)
 
 imp_data <- new_data_rmNA %>%
@@ -37,24 +55,26 @@ imp_data <- new_data_rmNA %>%
          CV_HGC_RES_MOM_1997,
          CV_HGC_RES_DAD_1997)
 
+imp <- mice(imp_data, m = 5, method = 'pmm')
+
 # Initial pre-weight fit of imputations
 
-imp <- mice(imp_data, m = 5, method = 'pmm', seed = 123)
 # fit_imp <- with(imp, lm(CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_MOM_1997 + CV_HGC_RES_DAD_1997))
 # summary(pool(fit_imp))
 
-completed_data <- complete(imp, 1)
+completed_data <- complete(imp, action = 1L)
 
 model_plot <- lm(CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_MOM_1997 + CV_HGC_RES_DAD_1997, data = completed_data)
 
 completed_data <- completed_data %>%
-  mutate(fitted = model_plot$fitted.values,
-         residuals = model_plot$residuals)
+                  mutate(fitted = model_plot$fitted.values,
+                  residuals = model_plot$residuals)
+
+########
 
 svy_design <- svydesign(ids = ~1,
-                        weights = ~new_data_rmNA$SAMPLING_WEIGHT_CC_1997,
+                        weights = new_data_rmNA$SAMPLING_WEIGHT_CC_1997,
                         data = completed_data)
-#######
 
 svy_model <- svyglm(
   CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_MOM_1997 + CV_HGC_RES_DAD_1997,
@@ -86,3 +106,16 @@ ggplot(df, aes(x = fitted, y = hD)) +
                 label = paste("(", round(x_value, 2), ", ",
                               round(y_value, 2), ")", sep = "")),
             vjust = -1, hjust = 1, size = 3.2)
+
+# Visualize pooled regression of imps
+
+pooled_fit <- pool(fit_imp)
+pooled_tidy <- tidy(pooled_fit, conf.int = TRUE)
+
+ggplot(pooled_tidy, aes(x = term, y = estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_pointrange() +
+  coord_flip() +
+  labs(title = "Pooled Regression Coefficients",
+       x = "Predictor",
+       y = "Estimated Effect (with 95% CI)") +
+  theme_minimal()
