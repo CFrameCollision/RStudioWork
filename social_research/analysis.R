@@ -1,23 +1,26 @@
 # Run "./data/new_data97-educational-data/new_data97-educational-data.R" first.
+# This file runs analyses on two rounds of the NLSY97 data set.
+setwd("C:/Users/byrds/Documents/rStudio_work/social_research")
 
+library(MASS)
 library(tidyverse)
 library(extrafont)
 library(ggthemes)
 library(hrbrthemes)
 library(thematic)
-library(extrafontdb)
 library(colorspace)
 library(addinslist)
-library(clipr)
 library(gmodels)
-library(Hmisc)
 library(RColorBrewer)
 library(DescTools)
 library(viridis)
 library(ggpmisc)
 library(naniar)
-library(survey)
 library(broom)
+library(mice)
+library(survey)
+
+source('data/nlsy97-educational-data/nlsy97-educational-data.R')
 
 # Race key:
 # 1 Black
@@ -39,7 +42,22 @@ new_data <- new_data %>%
     TRUE ~ NA_character_
   ))
 
-new_data_rmNA <- new_data %>% filter(!is.na(degree_label))
+# Descriptive characteristics of respondents
+
+# Degree attained
+
+new_data <- new_data %>%
+  mutate(degree_label = factor(degree_label,
+                               levels = c("None", "GED", "HS Diploma",
+                                          "AA", "BA", "MA", "PhD")))
+
+new_data_rmNA <- new_data %>% dplyr::filter(!is.na(degree_label))
+
+# Removes outliers
+new_data_rmNA <- new_data_rmNA %>%
+  filter(CV_HGC_RES_MOM_1997 <= 20 | is.na(CV_HGC_RES_MOM_1997)) %>%
+  filter(CV_HGC_RES_DAD_1997 <= 20 | is.na(CV_HGC_RES_DAD_1997))
+
 
 ggplot(new_data_rmNA, aes(x = degree_label)) +
   geom_bar(fill = "steelblue") +
@@ -52,52 +70,33 @@ ggplot(new_data_rmNA, aes(x = degree_label)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-regression_data <- new_data_rmNA %>%
-  filter(!is.na(KEY_RACE_ETHNICITY_1997),
-         !is.na(CV_HGC_RES_MOM_1997),
-         !is.na(CV_HGC_RES_DAD_1997))
+ggplot(new_data_rmNA, aes(x = CV_HGC_RES_MOM_1997)) +
+  geom_bar(fill = "lightgreen") +
+  labs(title = "Highest Degree Attained (Mother)",
+       x = "Degree") +
+  stat_count(geom = 'text', 
+             color = 'black', 
+             aes(label = after_stat(count)),
+             position = position_stack(vjust = 1.05)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-lmresult <- lm(CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
-                 KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_MOM_1997 +
-                 CV_HGC_RES_DAD_1997,
-               data = regression_data)
-
-summary(lmresult)
-
-df <- regression_data %>%
-  mutate(fitted = lmresult$fitted.values,
-         residuals = lmresult$residuals,
-         hD = CV_HIGHEST_DEGREE_EVER_EDT_2017)
-
-median(df$fitted)
-
-x_value <- 2.747199
-y_value <- (2.72e-14) + 1 * x_value
-
-ggplot(df, aes(x = fitted, y = hD)) +
-  geom_point() +
-  geom_smooth(method = 'lm', color = '#679df5') +
-  labs(title = "test") +
-  xlab("Fitted values (see section 2-4 for more info)") +
-  ylab("Prayer Frequency") +
-  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
-  theme_pander() +
-  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt")) +
-  geom_point(aes(x = x_value, y = y_value), color = "red", size = 2.2) +
-  geom_text(aes(x = x_value, y = y_value,
-                label = paste("(", round(x_value, 2), ", ",
-                              round(y_value, 2), ")", sep = "")),
-            vjust = -1, hjust = 1, size = 3.2)
+ggplot(new_data_rmNA, aes(x = CV_HGC_RES_DAD_1997)) +
+  geom_bar(fill = "lightpink") +
+  labs(title = "Highest Degree Attained (Father)",
+       x = "Degree") +
+  stat_count(geom = 'text', 
+             color = 'black', 
+             aes(label = after_stat(count)),
+             position = position_stack(vjust = 1.05)) +
+  theme_minimal() +
+  theme()
 
 
-
-##########  Start of missing data analysis ##### ##### 
-
-
-
+##########  Start of missing data analysis ##########
 # Looking at missing-ness by race/ethnicity
 new_data_rmNA %>%
-  select(KEY_RACE_ETHNICITY_1997, CV_HGC_RES_MOM_1997, CV_HGC_RES_DAD_1997) %>%
+  dplyr::select(KEY_RACE_ETHNICITY_1997, CV_HGC_RES_MOM_1997, CV_HGC_RES_DAD_1997) %>%
   mutate(
     mom_missing = is.na(CV_HGC_RES_MOM_1997),
     dad_missing = is.na(CV_HGC_RES_DAD_1997)
@@ -114,87 +113,110 @@ new_data_rmNA %>%
 gg_miss_upset(new_data_rmNA)
 
 mcar_data <- new_data_rmNA %>%
-  select(CV_HIGHEST_DEGREE_EVER_EDT_2017,
+  dplyr::select(CV_HIGHEST_DEGREE_EVER_EDT_2017,
          CV_HGC_RES_MOM_1997,
          CV_HGC_RES_DAD_1997)
 
-mcar_test(new_data_rmNA)
+mcar_test(mcar_data)
 
-# Does multiple imputations 
 
-library(mice)
+
+
+##########  Imputations ##########
+# Multiple imputations 
 
 imp_data <- new_data_rmNA %>%
-  select(CV_HIGHEST_DEGREE_EVER_EDT_2017,
-         KEY_RACE_ETHNICITY_1997,
-         CV_HGC_RES_MOM_1997,
-         CV_HGC_RES_DAD_1997)
+  dplyr::select(CV_HIGHEST_DEGREE_EVER_EDT_2017,
+         KEY_RACE_ETHNICITY_1997, CV_HGC_RES_MOM_1997,
+         CV_HGC_RES_DAD_1997, SAMPLING_WEIGHT_CC_2017)
 
 imp <- mice(imp_data, m = 5, method = 'pmm')
 
-# Initial pre-weight fit of imputations
+imp <- complete(imp, action = "long", include = TRUE)
 
-# fit_imp <- with(imp, lm(CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
-                          #KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_MOM_1997 +
-                          #CV_HGC_RES_DAD_1997))
-# summary(pool(fit_imp))
+imp$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
+  imp$CV_HIGHEST_DEGREE_EVER_EDT_2017,
+  levels = 0:6,
+  labels = c("None", "GED", "HS", "AA", "BA", "MA", "PhD"),
+  ordered = TRUE
+)
 
-completed_data <- complete(imp, action = 1L)
+# Re-convert to mids object
+imp <- as.mids(imp)
 
-model_plot <- lm(CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ KEY_RACE_ETHNICITY_1997 +
-                   CV_HGC_RES_MOM_1997 + CV_HGC_RES_DAD_1997,
-                 data = completed_data)
+# Runs ordinal log regr on imp data
+pom_imp <- with(imp, polr(
+  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ CV_HGC_RES_MOM_1997 +
+    KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_DAD_1997,
+  Hess = TRUE
+))
 
-completed_data <- completed_data %>%
-  mutate(fitted = model_plot$fitted.values,
-         residuals = model_plot$residuals)
+# Pool the results
+pom_pooled <- pool(pom_imp)
+summary(pom_pooled)
 
-########
+# Convert pooled polr results to tidy format
+pooled_summary <- summary(pom_pooled)
 
-svy_design <- svydesign(ids = ~1,
-                        weights = new_data_rmNA$SAMPLING_WEIGHT_CC_1997,
-                        data = completed_data)
+# Add term names
+tidy_pooled <- tidy(pom_pooled, conf.int = TRUE, conf.level = 0.95)
+
+tidy_pooled_sub <- subset(tidy_pooled, tidy_pooled$estimate <= 0.8)
+
+# Plot
+ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(
+    title = "Pooled Coefficient Estimates from Imputed polr Model",
+    x = "Log Odds Estimate",
+    y = "Predictor & Threshold Estimate"
+  ) +
+  theme_minimal()
+
+tidy_pooled_sub <- subset(tidy_pooled, tidy_pooled$estimate > 0.8)
+
+# Plot
+ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(
+    title = "Pooled Coefficient Estimates from Imputed polr Model",
+    x = "Log Odds Estimate",
+    y = "Predictor & Threshold Estimate"
+  ) +
+  theme_minimal()
+
+# Selects an imp
+completed_data <- complete(imp, action = 5L)
+
+# Weighted GLM
+completed_data$degree_num <- as.numeric(
+  completed_data$CV_HIGHEST_DEGREE_EVER_EDT_2017)
+
+svy_design <- svydesign(
+  ids = ~1,
+  weights = ~SAMPLING_WEIGHT_CC_2017,
+  data = completed_data
+)
 
 svy_model <- svyglm(
-  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_MOM_1997 + CV_HGC_RES_DAD_1997,
+  degree_num ~ CV_HGC_RES_MOM_1997 +
+    KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_DAD_1997,
   design = svy_design
 )
 
 summary(svy_model)
 
-df <- data.frame(fitted = svy_model$fitted.values,
-                 residuals = svy_model$residuals,
-                 hD = new_data_rmNA$CV_HIGHEST_DEGREE_EVER_EDT_2017)
+# Visualize pooled regression coefficients of imps (not done yet)
 
-median(df$fitted)
+library(effects)
 
-x_value <- 2.747199
-y_value <- (2.72e-14) + 1 * x_value
+# Use one completed data set as demonstration
+effs <- Effect(c("KEY_RACE_ETHNICITY_1997", "CV_HGC_RES_MOM_1997"),
+               svy_model)
 
-ggplot(df, aes(x = fitted, y = hD)) +
-  geom_point() +
-  geom_smooth(method = 'lm', color = '#679df5') +
-  labs(title = "test") +
-  xlab("Fitted values (see section 2-4 for more info)") +
-  ylab("Prayer Frequency") +
-  stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4,vjust = 1.3) +
-  theme_pander() +
-  theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt")) +
-  geom_point(aes(x = x_value, y = y_value), color = "red", size = 2.2) +
-  geom_text(aes(x = x_value, y = y_value,
-                label = paste("(", round(x_value, 2), ", ",
-                              round(y_value, 2), ")", sep = "")),
-            vjust = -1, hjust = 1, size = 3.2)
-
-# Visualize pooled regression of imps
-
-pooled_fit <- pool(fit_imp)
-pooled_tidy <- tidy(pooled_fit, conf.int = TRUE)
-
-ggplot(pooled_tidy, aes(x = term, y = estimate, ymin = conf.low, ymax = conf.high)) +
-  geom_pointrange() +
-  coord_flip() +
-  labs(title = "Pooled Regression Coefficients",
-       x = "Predictor",
-       y = "Estimated Effect (with 95% CI)") +
-  theme_minimal()
+# For predicted probabilities
+as.data.frame(effs)
