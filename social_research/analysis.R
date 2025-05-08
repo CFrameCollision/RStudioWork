@@ -1,6 +1,5 @@
 # Run "./data/new_data97-educational-data/new_data97-educational-data.R" first.
-# This file runs analyses on two rounds of the NLSY97 data set.
-setwd("C:/Users/byrds/Documents/rStudio_work/social_research")
+# This file runs analyses on two rounds of the NLSY97 data set. The README
 
 library(MASS)
 library(tidyverse)
@@ -39,8 +38,7 @@ new_data <- new_data %>%
     CV_HIGHEST_DEGREE_EVER_EDT_2017 == 4 ~ "BA",
     CV_HIGHEST_DEGREE_EVER_EDT_2017 == 5 ~ "MA",
     CV_HIGHEST_DEGREE_EVER_EDT_2017 == 6 ~ "PhD",
-    TRUE ~ NA_character_
-  ))
+    TRUE ~ NA_character_))
 
 # Descriptive characteristics of respondents
 
@@ -58,39 +56,35 @@ new_data_rmNA <- new_data_rmNA %>%
   filter(CV_HGC_RES_MOM_1997 <= 20 | is.na(CV_HGC_RES_MOM_1997)) %>%
   filter(CV_HGC_RES_DAD_1997 <= 20 | is.na(CV_HGC_RES_DAD_1997))
 
-
+#title = "Highest Degree Attained of Parents (Overall)"
 ggplot(new_data_rmNA, aes(x = degree_label)) +
   geom_bar(fill = "steelblue") +
-  labs(title = "Highest Degree Attained",
-       x = "Degree") +
+  labs(x = "Degree") +
   stat_count(geom = 'text', 
              color = 'black', 
              aes(label = after_stat(count)),
              position = position_stack(vjust = 1.05)) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme_minimal()
 
+#title = "Highest Degree Attained (Mother)"
 ggplot(new_data_rmNA, aes(x = CV_HGC_RES_MOM_1997)) +
   geom_bar(fill = "lightgreen") +
-  labs(title = "Highest Degree Attained (Mother)",
-       x = "Degree") +
+  labs(x = "Degree") +
   stat_count(geom = 'text', 
              color = 'black', 
              aes(label = after_stat(count)),
              position = position_stack(vjust = 1.05)) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme_minimal()
 
+#title = "Highest Degree Attained (Father)"
 ggplot(new_data_rmNA, aes(x = CV_HGC_RES_DAD_1997)) +
   geom_bar(fill = "lightpink") +
-  labs(title = "Highest Degree Attained (Father)",
-       x = "Degree") +
+  labs(x = "Degree") +
   stat_count(geom = 'text', 
              color = 'black', 
              aes(label = after_stat(count)),
              position = position_stack(vjust = 1.05)) +
-  theme_minimal() +
-  theme()
+  theme_minimal() 
 
 
 ##########  Start of missing data analysis ##########
@@ -134,6 +128,7 @@ imp <- mice(imp_data, m = 5, method = 'pmm')
 
 imp <- complete(imp, action = "long", include = TRUE)
 
+# Factors imputations
 imp$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
   imp$CV_HIGHEST_DEGREE_EVER_EDT_2017,
   levels = 0:6,
@@ -152,41 +147,36 @@ pom_imp <- with(imp, polr(
 ))
 
 # Pool the results
+# !!!!!Remember data is logarithmic!!!!!
 pom_pooled <- pool(pom_imp)
 summary(pom_pooled)
 
-# Convert pooled polr results to tidy format
+# Converting pooled results to tidy format
 pooled_summary <- summary(pom_pooled)
 
-# Add term names
+# Adding term names
 tidy_pooled <- tidy(pom_pooled, conf.int = TRUE, conf.level = 0.95)
 
 tidy_pooled_sub <- subset(tidy_pooled, tidy_pooled$estimate <= 0.8)
 
 # Plot
+# title = "Pooled Coefficient Estimates from Imputed polr Model"
 ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
   geom_point() +
   geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(
-    title = "Pooled Coefficient Estimates from Imputed polr Model",
-    x = "Log Odds Estimate",
-    y = "Predictor & Threshold Estimate"
-  ) +
+  labs(x = "Log Odds Estimate", y = "Predictor Estimate") +
   theme_minimal()
 
 tidy_pooled_sub <- subset(tidy_pooled, tidy_pooled$estimate > 0.8)
 
 # Plot
+# title = "Pooled Coefficient Estimates from Imputed polr Model"
 ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
   geom_point() +
   geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(
-    title = "Pooled Coefficient Estimates from Imputed polr Model",
-    x = "Log Odds Estimate",
-    y = "Predictor & Threshold Estimate"
-  ) +
+  labs(x = "Log Odds Estimate", y = "Threshold Estimate") +
   theme_minimal()
 
 # Selects an imp
@@ -215,8 +205,8 @@ summary(svy_model)
 library(effects)
 
 # Use one completed data set as demonstration
-effs <- Effect(c("KEY_RACE_ETHNICITY_1997", "CV_HGC_RES_MOM_1997"),
+effect_svy_model <- effects::Effect(c("KEY_RACE_ETHNICITY_1997", "CV_HGC_RES_MOM_1997"),
                svy_model)
 
 # For predicted probabilities
-as.data.frame(effs)
+as.data.frame(effect_svy_model)
