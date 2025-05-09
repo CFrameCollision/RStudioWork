@@ -47,10 +47,7 @@ output            : papaja::apa6_pdf
 bibliography: references.bib
 ---
 
-```{r setup, include = FALSE}
-library("papaja")
-r_refs("references.bib")
-```
+
 
 The United States features a diverse system of education. As diverse as the processes between states and districts is the students who reside in each, with further divisions manifesting themselves in differing educational outcomes.
 
