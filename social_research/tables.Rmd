@@ -62,6 +62,22 @@ Among U.S. adults born from 1980 to 1984, how does the intersection of race/ethn
 
 # Methods (1.5-2.5 pg)
 
+<<<<<<< HEAD
+As previously described, the sample used was the National Longitudinal Survey of Youth 1997 (NLSY97) conducted by the US Bureau of Labor Statistics (BLS). This is a nationally representative sample carried out every year/two years (post 2011), with selection finalized in 1997 and round 0 of questions carried out in 1998. This database was chosen due to it's large sample size (\~8,000 respondents), robust and comprehensive question selection, representative nature, and ease of access. The sampling strategy, as described by the BLS, is as follows: Additional information about the NLSY97 is available on the NLS website [here](https://www.nlsinfo.org/content/cohorts/nlsy97 "NLS Info website").
+
+> The NLSY97 cohort was selected in two phases, as pictured in Figure 1. In the first phase, a list of housing units for the cross-sectional sample and the oversample was derived from two independently selected, stratified multistage area probability samples. This ensured an accurate representation of different sections of the population defined by race, income, region, and other factors. In the second phase, subsamples of the eligible persons identified in the first phase were selected for interview.
+
+Within the NLSY97, the data was subset to specify participants in round 18 who responded with an answer to the following question: [What is] the highest degree received as of the survey date?
+
+• Identify population, describe sampling strategy and why you chose that strategy. • What are the indicators of your variables? • How did you actually carry out the research? (study design and process) • Describe your data analysis – statistical test if quant or coding process if qual • Why is this context and this method the best choice for your research question?
+
+# Results (1-2 pg)
+
+• What were the results? • Provide descriptive statistics for key variables as well as results of data analysis • Data summaries are ok – i.e. tables & charts
+
+# Analysis (1.5-2.5 pg)
+
+=======
 As previously described, the sample used was the National Longitudinal Survey of Youth 1997 (NLSY97) conducted by the US Bureau of Labor Statistics. This is a nationally representative sample carried out every year/two years (post 2011), with selection finalized in 1997 and round 0 of questions carried out in 1998. This database was chosen due to it's large sample size (\~8,000 respondents), robust and comprehensive question selection, representative nature, and ease of access. Information about specific sampling methods for choosing the original cohort is available on the NLS website [here](https://www.nlsinfo.org/content/cohorts/nlsy97 "NLS Info website").
 
 Within the NLSY97, the data was subset to specify participants in round 18 who responded with an answer to the following question: [What is] the highest degree received as of the survey date?
@@ -74,6 +90,7 @@ Within the NLSY97, the data was subset to specify participants in round 18 who r
 
 # Analysis (1.5-2.5 pg)
 
+>>>>>>> origin/newData
 • What patterns are there in the responses? Discuss how these might shed light on your research question. On your hypothesis? • Is the data strong enough to make a conclusion for your hypothesis? How do you know?
 
 # Discussion (1.5-2.5pg)

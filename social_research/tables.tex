@@ -76,39 +76,6 @@
   \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
 \fi
 \makeatother
-% definitions for citeproc citations
-\NewDocumentCommand\citeproctext{}{}
-\NewDocumentCommand\citeproc{mm}{%
-  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
-\makeatletter
- % allow citations to break across lines
- \let\@cite@ofmt\@firstofone
- % avoid brackets around text for \cite:
- \def\@biblabel#1{}
- \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
-\makeatother
-\newlength{\cslhangindent}
-\setlength{\cslhangindent}{1.5em}
-\newlength{\csllabelwidth}
-\setlength{\csllabelwidth}{3em}
-\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
- {\begin{list}{}{%
-  \setlength{\itemindent}{0pt}
-  \setlength{\leftmargin}{0pt}
-  \setlength{\parsep}{0pt}
-  % turn on hanging indent if param 1 is 1
-  \ifodd #1
-   \setlength{\leftmargin}{\cslhangindent}
-   \setlength{\itemindent}{-1\cslhangindent}
-  \fi
-  % set entry spacing
-  \setlength{\itemsep}{#2\baselineskip}}}
- {\end{list}}
-\usepackage{calc}
-\newcommand{\CSLBlock}[1]{\hfill\break\parbox[t]{\linewidth}{\strut\ignorespaces#1\strut}}
-\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
-\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
-\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 \ifLuaTeX
 \usepackage[bidi=basic]{babel}
 \else
@@ -249,12 +216,25 @@ Among U.S. adults born from 1980 to 1984, how does the intersection of race/ethn
 
 \section{Methods (1.5-2.5 pg)}\label{methods-1.5-2.5-pg}
 
+<<<<<<< HEAD
+As previously described, the sample used was the National Longitudinal Survey of Youth 1997 (NLSY97) conducted by the US Bureau of Labor Statistics (BLS). This is a nationally representative sample carried out every year/two years (post 2011), with selection finalized in 1997 and round 0 of questions carried out in 1998. This database was chosen due to it's large sample size (\textasciitilde8,000 respondents), robust and comprehensive question selection, representative nature, and ease of access. The sampling strategy, as described by the BLS, is as follows: Additional information about the NLSY97 is available on the NLS website \href{https://www.nlsinfo.org/content/cohorts/nlsy97}{here}.
+
+\begin{quote}
+The NLSY97 cohort was selected in two phases, as pictured in Figure 1. In the first phase, a list of housing units for the cross-sectional sample and the oversample was derived from two independently selected, stratified multistage area probability samples. This ensured an accurate representation of different sections of the population defined by race, income, region, and other factors. In the second phase, subsamples of the eligible persons identified in the first phase were selected for interview.
+\end{quote}
+
+Within the NLSY97, the data was subset to specify participants in round 18 who responded with an answer to the following question: {[}What is{]} the highest degree received as of the survey date?
+
+• Identify population, describe sampling strategy and why you chose that strategy. • What are the indicators of your variables? • How did you actually carry out the research? (study design and process) • Describe your data analysis -- statistical test if quant or coding process if qual • Why is this context and this method the best choice for your research question?
+
+=======
 As previously described, the sample used was the National Longitudinal Survey of Youth 1997 (NLSY97) conducted by the US Bureau of Labor Statistics. This is a nationally representative sample carried out every year/two years (post 2011), with selection finalized in 1997 and round 0 of questions carried out in 1998. This database was chosen due to it's large sample size (\textasciitilde8,000 respondents), robust and comprehensive question selection, representative nature, and ease of access. Information about specific sampling methods for choosing the original cohort is available on the NLS website \href{https://www.nlsinfo.org/content/cohorts/nlsy97}{here}.
 
 Within the NLSY97, the data was subset to specify participants in round 18 who responded with an answer to the following question: {[}What is{]} the highest degree received as of the survey date?
 
 • Identify population, describe sampling strategy and why you chose that strategy. • What are the indicators of your variables? • How did you actually carry out the research? (study design and process) • Describe your data analysis -- statistical test if quant or coding process if qual • Why is this context and this method the best choice for your research question? (Assari, 2018)
 
+>>>>>>> origin/newData
 \section{Results (1-2 pg)}\label{results-1-2-pg}
 
 • What were the results? • Provide descriptive statistics for key variables as well as results of data analysis • Data summaries are ok -- i.e.~tables \& charts
@@ -270,6 +250,8 @@ Within the NLSY97, the data was subset to specify participants in round 18 who r
 \section*{References}\label{references}
 \addcontentsline{toc}{section}{References}
 
+<<<<<<< HEAD
+=======
 \phantomsection\label{refs}
 \begin{CSLReferences}{1}{0}
 \bibitem[\citeproctext]{ref-assari2018}
@@ -277,5 +259,6 @@ Assari, S. (2018). Parental Education Attainment and Educational Upward Mobility
 
 \end{CSLReferences}
 
+>>>>>>> origin/newData
 
 \end{document}
