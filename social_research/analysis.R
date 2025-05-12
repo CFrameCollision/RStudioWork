@@ -5,8 +5,6 @@ library(MASS)
 library(tidyverse)
 library(extrafont)
 library(ggthemes)
-library(hrbrthemes)
-library(thematic)
 library(colorspace)
 library(addinslist)
 library(gmodels)
@@ -18,6 +16,8 @@ library(naniar)
 library(broom)
 library(mice)
 library(survey)
+library(MissMech)
+library(papaja)
 
 source('data/nlsy97-educational-data/nlsy97-educational-data.R')
 
@@ -64,7 +64,7 @@ ggplot(new_data_rmNA, aes(x = degree_label)) +
              color = 'black', 
              aes(label = after_stat(count)),
              position = position_stack(vjust = 1.05)) +
-  theme_minimal()
+  theme_apa()
 
 #title = "Highest Degree Attained (Mother)"
 ggplot(new_data_rmNA, aes(x = CV_HGC_RES_MOM_1997)) +
@@ -108,12 +108,17 @@ gg_miss_upset(new_data_rmNA)
 
 mcar_data <- new_data_rmNA %>%
   dplyr::select(CV_HIGHEST_DEGREE_EVER_EDT_2017,
-         CV_HGC_RES_MOM_1997,
-         CV_HGC_RES_DAD_1997)
+                CV_HGC_RES_MOM_1997,
+                CV_HGC_RES_DAD_1997) %>%
+  mutate(across(everything(), as.numeric))
 
 mcar_test(mcar_data)
 
+# Apply Jamshidian and Jalals test
+MCAR_Test_Result <- TestMCARNormality(mcar_data)
 
+# View result
+print(MCAR_Test_Result)
 
 
 ##########  Imputations ##########
@@ -159,7 +164,7 @@ tidy_pooled <- tidy(pom_pooled, conf.int = TRUE, conf.level = 0.95)
 
 tidy_pooled_sub <- subset(tidy_pooled, tidy_pooled$estimate <= 0.8)
 
-# Plot
+# Plot for predictors
 # title = "Pooled Coefficient Estimates from Imputed polr Model"
 ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
   geom_point() +
@@ -170,7 +175,7 @@ ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
 
 tidy_pooled_sub <- subset(tidy_pooled, tidy_pooled$estimate > 0.8)
 
-# Plot
+# Plot for thresholds
 # title = "Pooled Coefficient Estimates from Imputed polr Model"
 ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
   geom_point() +
