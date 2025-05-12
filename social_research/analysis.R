@@ -18,6 +18,7 @@ library(mice)
 library(survey)
 library(MissMech)
 library(papaja)
+library(dplyr)
 
 source('data/nlsy97-educational-data/nlsy97-educational-data.R')
 
@@ -144,14 +145,63 @@ imp$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
 # Re-convert to mids object
 imp <- as.mids(imp)
 
+########## Imp Diagnoses ##########
+
+# Redoing long transformation so as to leave imp unaffected
+long_imp <- complete(imp, action = "long", include = TRUE)
+
+# Marks which values were originally missing
+long_imp <- long_imp %>%
+  mutate(.id = as.integer(.id)) %>%
+  group_by(.imp) %>%
+  mutate(
+    mom_missing = is.na(imp_data$CV_HGC_RES_MOM_1997),
+    dad_missing = is.na(imp_data$CV_HGC_RES_DAD_1997)
+  ) %>%
+  ungroup()
+
+# Reshapes to long format for faceting
+long_faceted <- long_imp %>%
+  select(.imp, CV_HGC_RES_MOM_1997, CV_HGC_RES_DAD_1997, mom_missing, dad_missing) %>%
+  pivot_longer(
+    cols = starts_with("CV_HGC_RES_"),
+    names_to = "parent_var",
+    values_to = "hgc"
+  ) %>%
+  mutate(
+    missing_flag = case_when(
+      parent_var == "CV_HGC_RES_MOM_1997" & mom_missing ~ "Imputed",
+      parent_var == "CV_HGC_RES_DAD_1997" & dad_missing ~ "Imputed",
+      TRUE ~ "Observed"
+    )
+  )
+
+# Plot
+ggplot(long_faceted, aes(x = hgc, fill = missing_flag, color = missing_flag)) +
+  geom_density(alpha = 0.3) +
+  facet_wrap(~parent_var, scales = "free_y", labeller = as_labeller(
+    c("CV_HGC_RES_MOM_1997" = "Mother's Education",
+      "CV_HGC_RES_DAD_1997" = "Father's Education"))) +
+  scale_fill_manual(values = c("Observed" = "blue", "Imputed" = "red")) +
+  scale_color_manual(values = c("Observed" = "blue", "Imputed" = "red")) +
+  labs(x = "Highest Grade Completed",
+       y = "Density",
+       fill = "Data Type",
+       color = "Data Type") +
+  theme_apa()
+
+ggsave(filename = "densityplot.png", plot = last_plot(), scale = 1, device = "png",
+       dpi = "retina", width = 6.5, height = 3, units = "in")
+
+########## POLR & Survey ##########
+
 # Runs ordinal log regr on imp data
 pom_imp <- with(imp, polr(
-  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ CV_HGC_RES_MOM_1997 +
-    KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_DAD_1997,
+  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ CV_HGC_RES_MOM_1997 *
+    KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_DAD_1997 * KEY_RACE_ETHNICITY_1997,
   Hess = TRUE
 ))
 
-# Pool the results
 # !!!!!Remember data is logarithmic!!!!!
 pom_pooled <- pool(pom_imp)
 summary(pom_pooled)
@@ -162,7 +212,10 @@ pooled_summary <- summary(pom_pooled)
 # Adding term names
 tidy_pooled <- tidy(pom_pooled, conf.int = TRUE, conf.level = 0.95)
 
-tidy_pooled_sub <- subset(tidy_pooled, tidy_pooled$estimate <= 0.8)
+tidy_pooled_sub <- tidy_pooled %>% dplyr::filter(term %in% c(
+  "CV_HGC_RES_MOM_1997", "CV_HGC_RES_DAD_1997", "KEY_RACE_ETHNICITY_1997",
+  "CV_HGC_RES_MOM_1997:KEY_RACE_ETHNICITY_1997",
+  "KEY_RACE_ETHNICITY_1997:CV_HGC_RES_DAD_1997"))
 
 # Plot for predictors
 # title = "Pooled Coefficient Estimates from Imputed polr Model"
@@ -173,7 +226,10 @@ ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
   labs(x = "Log Odds Estimate", y = "Predictor Estimate") +
   theme_minimal()
 
-tidy_pooled_sub <- subset(tidy_pooled, tidy_pooled$estimate > 0.8)
+tidy_pooled_sub <- tidy_pooled %>% dplyr::filter(!term %in% c(
+  "CV_HGC_RES_MOM_1997", "CV_HGC_RES_DAD_1997", "KEY_RACE_ETHNICITY_1997",
+  "CV_HGC_RES_MOM_1997:KEY_RACE_ETHNICITY_1997",
+  "KEY_RACE_ETHNICITY_1997:CV_HGC_RES_DAD_1997"))
 
 # Plot for thresholds
 # title = "Pooled Coefficient Estimates from Imputed polr Model"
@@ -197,9 +253,8 @@ svy_design <- svydesign(
   data = completed_data
 )
 
-svy_model <- svyglm(
-  degree_num ~ CV_HGC_RES_MOM_1997 +
-    KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_DAD_1997,
+svy_model <- svyglm(degree_num ~ CV_HGC_RES_MOM_1997 *
+    KEY_RACE_ETHNICITY_1997 + CV_HGC_RES_DAD_1997 * KEY_RACE_ETHNICITY_1997,
   design = svy_design
 )
 
