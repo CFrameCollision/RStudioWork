@@ -1,0 +1,2 @@
+### Introduction
+This folder contains the necessary data and code to reproduce the data found in my paper "The Interplay of Race/Ethnicity and Parental Education in College Completion: A Cohort Analysis". To run the scripts, ensure that you have either downloaded this folder (`rstudio/social_research`) and it's subfolders in their entirety or have used the included NLSY97 tags on the NLS investigator website to download the data yourself.

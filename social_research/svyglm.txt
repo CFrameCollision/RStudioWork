@@ -1,0 +1,22 @@
+completed_data$degree_num <- as.numeric(completed_data$CV_HIGHEST_DEGREE_EVER_EDT_2017)
+
+# Define survey design with weights
+svy_design <- svydesign(
+  ids = ~1,
+  weights = ~SAMPLING_WEIGHT_CC_2017,
+  data = completed_data
+)
+
+# Run weighted ordinal logistic regression using svyolr
+svy_model <- svyglm(
+  degree_num ~ CV_HGC_RES_MOM_1997 * DV_RACE_BLACK +
+    CV_HGC_RES_MOM_1997 * DV_RACE_HISPANIC +
+    CV_HGC_RES_MOM_1997 * DV_RACE_MIXED +
+    CV_HGC_RES_DAD_1997 * DV_RACE_BLACK +
+    CV_HGC_RES_DAD_1997 * DV_RACE_HISPANIC +
+    CV_HGC_RES_DAD_1997 * DV_RACE_MIXED,
+  design = svy_design
+)
+
+# View results
+summary(svy_model)
