@@ -184,7 +184,6 @@ mcar_test(mcar_data)
 # Apply Jamshidian and Jalals test
 MCAR_Test_Result <- TestMCARNormality(mcar_data)
 
-# View result
 print(MCAR_Test_Result)
 
 # Creating dummy vars
@@ -211,9 +210,34 @@ imp_data <- new_data_rmNA %>%
     SAMPLING_WEIGHT_CC_2017
   )
 
-imp <- mice(imp_data, m = 5, method = 'pmm')
+# Turn off/on predictor matrix imputation
+use_predictor_matrix <- FALSE
 
-imp <- complete(imp, action = "long", include = TRUE)
+if (use_predictor_matrix) {
+  # Imp w/ predictor matrix
+  # See notes for matrix definition
+  impPredictorMatrix <- rbind(
+    c(rep(0, 7)), #1
+    c(rep(0, 7)), #2
+    c(rep(0, 7)), #3
+    c(rep(0, 7)), #4
+    c(1, 1, 1, 1, 0, 1, 0), #5
+    c(1, 1, 1, 1, 1, 0, 0), #6
+    c(rep(0, 7)) #7
+  )
+
+  impPred <- mice(
+    imp_data,
+    m = 5,
+    method = 'pmm',
+    predictorMatrix = impPredictorMatrix
+  )
+  impPred <- complete(impPred, action = "long", include = TRUE)
+} else {
+  # Imp w/o predictor matrix. Used in paper
+  imp <- mice(imp_data, m = 5, method = 'pmm')
+  imp <- complete(imp, action = "long", include = TRUE)
+}
 
 # Factors imputations
 imp$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
@@ -223,10 +247,9 @@ imp$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
   ordered = TRUE
 )
 
-# Re-convert to mids object
 imp <- as.mids(imp)
 
-########## Imp Diagnoses ##########
+########## Imputation Diagnoses ##########
 
 # Redoing long transformation so as to leave imp unaffected
 long_imp <- complete(imp, action = "long", include = TRUE)
@@ -241,7 +264,7 @@ long_imp <- long_imp %>%
   ) %>%
   ungroup()
 
-# Reshapes to long format for faceting
+# Facilitates faceting
 long_faceted <- long_imp %>%
   dplyr::select(
     .imp,
@@ -264,7 +287,10 @@ long_faceted <- long_imp %>%
   )
 
 # Plot
-ggplot(long_faceted, aes(x = hgc, fill = missing_flag, color = missing_flag)) +
+p <- ggplot(
+  long_faceted,
+  aes(x = hgc, fill = missing_flag, color = missing_flag)
+) +
   geom_density(alpha = 0.3) +
   facet_wrap(
     ~parent_var,
@@ -286,6 +312,8 @@ ggplot(long_faceted, aes(x = hgc, fill = missing_flag, color = missing_flag)) +
   ) +
   theme_apa()
 
+print(p)
+
 ggsave(
   filename = "densityplot.png",
   plot = last_plot(),
@@ -299,7 +327,7 @@ ggsave(
 
 ########## POLR ##########
 
-# Runs ordinal log regr on imp data
+# Runs ordinal logit on imp data
 pom_imp <- with(
   imp,
   polr(
@@ -437,12 +465,11 @@ logistic <- function(x) 1 / (1 + exp(-x))
 
 cum_probs <- sapply(thresholds, function(cut) logistic(cut - x_vals))
 
-# Turn into a data frame
-df <- as.data.frame(cum_probs)
-df$x <- x_vals
+dfc <- as.data.frame(cum_probs)
+dfc$x <- x_vals
 
 # Calculate individual category probabilities
-df <- df %>%
+dfc <- dfc %>%
   mutate(
     None = `None|GED`,
     GED = `GED|HS` - `None|GED`,
@@ -456,7 +483,7 @@ df <- df %>%
   pivot_longer(-x, names_to = "Education_Level", values_to = "Probability")
 
 # plot
-ggplot(df, aes(x = x, y = Probability, color = Education_Level)) +
+ggplot(dfc, aes(x = x, y = Probability, color = Education_Level)) +
   geom_line(linewidth = 0.78) +
   labs(x = "Linear Predictor", y = "Probability", color = "Education Level") +
   theme_apa()
@@ -505,7 +532,7 @@ svy_model <- svyolr(
   design = svy_design
 )
 
-# View results
+
 print("==================")
 summary(svy_model)
 print("==================")
