@@ -1,15 +1,23 @@
 # Run "./data/new_data97-educational-data/new_data97-educational-data.R" first.
 # This file runs analyses on two rounds of the NLSY97 data set. The README
+# Things may/will break if you don't clear the data pane between executions.
+
+# After working on this on and off for a year, only now have I checked cor() between mom and dad HGC... it's like 0.68 or something (I cleared the
+# console by accident and I don't feel like recoding Rubins rule). Notes for later when I stop having an existential crisis below...
+
+# Alright, so I'm finding collinearity between mom and dad. What this means is I should collapse the data into an average for both parent. Secondly,
+# my POLR model might be incorrect in the way I've specified it. I should look into it more. Going back to the first point, cases where dad and mom are
+# missing are relatively low at n = 459 / 6% of all valid cases. Look at imputing this.
 
 library(MASS)
 library(tidyverse)
-library(ggthemes)
+# library(ggthemes)
 library(colorspace)
-library(gmodels)
-library(RColorBrewer)
-library(DescTools)
-library(viridis)
-library(ggpmisc)
+# library(gmodels)
+# library(RColorBrewer)
+# library(DescTools)
+# library(viridis)
+# library(ggpmisc)
 library(naniar)
 library(mice)
 library(survey)
@@ -18,6 +26,7 @@ library(papaja)
 library(VIM)
 library(effects)
 library(visdat)
+library(stargazer)
 
 if (
   Sys.info()['sysname'] == "Linux" && basename(getwd()) != "social_research"
@@ -33,8 +42,9 @@ source('data/nlsy97-educational-data/nlsy97-educational-data.R')
 # 3 Mixed Race (Non-Hispanic)
 # 4 Non-Black
 
-# Filter out non-responses
+# Factorise categorical data
 
+# PD = Professional Degree
 new_data <- new_data %>%
   mutate(
     degree_label = case_when(
@@ -44,7 +54,7 @@ new_data <- new_data %>%
       CV_HIGHEST_DEGREE_EVER_EDT_2017 == 3 ~ "AA",
       CV_HIGHEST_DEGREE_EVER_EDT_2017 == 4 ~ "BA",
       CV_HIGHEST_DEGREE_EVER_EDT_2017 == 5 ~ "MA",
-      CV_HIGHEST_DEGREE_EVER_EDT_2017 == 6 ~ "PhD",
+      CV_HIGHEST_DEGREE_EVER_EDT_2017 %in% c(6, 7) ~ "PhD",
       TRUE ~ NA_character_
     )
   )
@@ -82,10 +92,11 @@ new_data <- new_data %>%
 
 new_data_rmNA <- new_data %>% dplyr::filter(!is.na(degree_label))
 
-# Removes outliers
+# Removes outliers. 95 is coded as ungraded. 95 responses ~ n = 6. See below code.
+# new_data_rmNA %>% dplyr::filter(CV_HGC_RES_DAD_1997 > 20 | CV_HGC_RES_MOM_1997 > 20)
 new_data_rmNA <- new_data_rmNA %>%
-  filter(CV_HGC_RES_MOM_1997 <= 20 | is.na(CV_HGC_RES_MOM_1997)) %>%
-  filter(CV_HGC_RES_DAD_1997 <= 20 | is.na(CV_HGC_RES_DAD_1997))
+  dplyr::filter(CV_HGC_RES_MOM_1997 <= 20 | is.na(CV_HGC_RES_MOM_1997)) %>%
+  dplyr::filter(CV_HGC_RES_DAD_1997 <= 20 | is.na(CV_HGC_RES_DAD_1997))
 
 #title = "Highest Degree Attained of Respondents (Overall)"
 ggplot(new_data_rmNA, aes(x = degree_label, fill = race)) +
@@ -115,7 +126,7 @@ ggsave(
 
 #title = "Highest Degree Attained (Mother)"
 ggplot(new_data_rmNA, aes(x = CV_HGC_RES_MOM_1997)) +
-  geom_bar(fill = "lightgreen") +
+  geom_bar(fill = "lightblue") +
   labs(x = "Degree") +
   stat_count(
     geom = 'text',
@@ -159,7 +170,8 @@ new_data_rmNA %>%
 
 # Look at missingness by vis dat and VIM
 
-vis_dat(new_data_rmNA)
+vis_dat(new_data_rmNA[c(7, 8)]) +
+  theme(axis.text.x = element_text(hjust = 0.2, vjust = 0.3))
 aggr(
   new_data_rmNA[c("CV_HGC_RES_DAD_1997", "CV_HGC_RES_MOM_1997", "race")],
   numbers = TRUE,
@@ -211,9 +223,9 @@ imp_data <- new_data_rmNA %>%
   )
 
 # Turn off/on predictor matrix imputation
-use_predictor_matrix <- FALSE
+use_predictor_matrix <- TRUE
 
-if (use_predictor_matrix) {
+if (use_predictor_matrix == FALSE) {
   # Imp w/ predictor matrix
   # See notes for matrix definition
   impPredictorMatrix <- rbind(
@@ -221,8 +233,8 @@ if (use_predictor_matrix) {
     c(rep(0, 7)), #2
     c(rep(0, 7)), #3
     c(rep(0, 7)), #4
-    c(1, 1, 1, 1, 0, 1, 0), #5
-    c(1, 1, 1, 1, 1, 0, 0), #6
+    c(1, 1, 1, 1, 0, 1, 0), #5 - Predictors for HGC Mom
+    c(1, 1, 1, 1, 1, 0, 0), #6 - Predictors for HGC Dad
     c(rep(0, 7)) #7
   )
 
@@ -230,12 +242,13 @@ if (use_predictor_matrix) {
     imp_data,
     m = 5,
     method = 'pmm',
-    predictorMatrix = impPredictorMatrix
+    predictorMatrix = impPredictorMatrix,
+    seed = 1234
   )
-  impPred <- complete(impPred, action = "long", include = TRUE)
+  imp <- complete(impPred, action = "long", include = TRUE)
 } else {
   # Imp w/o predictor matrix. Used in paper
-  imp <- mice(imp_data, m = 5, method = 'pmm')
+  imp <- mice(imp_data, m = 5, method = 'pmm', seed = 1234)
   imp <- complete(imp, action = "long", include = TRUE)
 }
 
@@ -286,7 +299,6 @@ long_faceted <- long_imp %>%
     )
   )
 
-# Plot
 p <- ggplot(
   long_faceted,
   aes(x = hgc, fill = missing_flag, color = missing_flag)
@@ -642,7 +654,6 @@ for (i in c("CV_HGC_RES_MOM_1997", "CV_HGC_RES_DAD_1997")) {
 
   long_df1 <- long_df %>% filter(degree != "PhD")
 
-  # Plot
   print(
     ggplot(long_df1, aes(x = !!sym(i), y = fit, color = Race, fill = Race)) +
       geom_line(linewidth = 0.6) +
@@ -661,9 +672,8 @@ for (i in c("CV_HGC_RES_MOM_1997", "CV_HGC_RES_DAD_1997")) {
   )
 
   long_df2 <- long_df %>%
-    filter(degree == "PhD")
+    dplyr::filter(degree == "PhD")
 
-  # Plot
   print(
     ggplot(long_df2, aes(x = !!sym(i), y = fit, color = Race, fill = Race)) +
       geom_line(linewidth = 0.6) +

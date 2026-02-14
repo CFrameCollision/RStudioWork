@@ -61,7 +61,23 @@ imp_data <- new_data_rmNA %>%
     CV_HGC_RES_DAD_1997
   )
 
-imp <- mice(imp_data, m = 5, method = 'pmm')
+impPredictorMatrix <- rbind(
+  c(rep(0, 7)), #1
+  c(rep(0, 7)), #2
+  c(rep(0, 7)), #3
+  c(rep(0, 7)), #4
+  c(1, 1, 1, 1, 0, 1, 0), #5 - Predictors for HGC Mom
+  c(1, 1, 1, 1, 1, 0, 0), #6 - Predictors for HGC Dad
+  c(rep(0, 7)) #7
+)
+
+imp <- mice(
+  imp_data,
+  m = 5,
+  method = 'pmm',
+  predictorMatrix = impPredictorMatrix,
+  seed = 1234
+)
 
 # Initial pre-weight fit of imputations
 
@@ -119,8 +135,6 @@ ggplot(df, aes(x = fitted, y = hD)) +
   geom_point() +
   geom_smooth(method = 'lm', color = '#679df5') +
   labs(title = "test") +
-  xlab("Fitted values (see section 2-4 for more info)") +
-  ylab("Prayer Frequency") +
   stat_poly_eq(use_label(c("eq", "R2")), rr.digits = 4, vjust = 1.3) +
   theme_pander() +
   theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt")) +
