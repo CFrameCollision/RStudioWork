@@ -1,0 +1,240 @@
+% This is the "preamble" of the document. This is where the format options get set.
+% Pro-tip: things following the % mark will not be compiled by LaTeX. I'll be using them extensively to explain things as we go.
+% Note: not to scare you off of LaTeX, but it's normal to have problems. And ya girl has been having some. I've included the copyright info at the bottom of the document from the guy who wrote this package, because his documentation doesn't entirely match how it's actually used. So this is a combination of his working preamble along with my added commentary or explanation. 
+%% 
+
+
+\documentclass[jou,12pt,floatsintext]{apa7}
+% Document class input explanation ________________
+% LaTeX files need to start with the document class, so it knows what it's using
+% - This file is using the apa7 document class, as it has a lot of the formatting built in
+% There are two sets of brackets in LaTeX, for each command (the things that start with the slash \ )
+% - The squiggle brackets {} are mandatory for executing the command
+% - The square brackets [] are options for that command. There can be more than one set of square brackets for some commands
+% Options used in this document (general note - for each of these, if you want to use the other options, swap it out in that spot in the square brackets):
+% - stu: this sets the `document mode' as the "student paper" version. Other options are jou (journal), man (manuscript, for journal submission), and doc (a plain document)
+% --- The student setting includes things like 'duedate', 'course', and 'professor' on the title page. If these aren't wanted/needed, use the 'man' setting. It also defaults to including the tables and figures at the end of the document. This can be changed by including the 'floatsintext' option, as I have for you. If the instructor wants those at the end, remove that from the square brackets.
+% --- The manuscript setting is roughly what you would use to submit to a journal, so uses 'date' instead of 'duedate', and doesn't include the 'course' or 'professor' info. As with 'stu', it defaults to putting the tables and figures at the end rather than in text. The same option will bump those images in text.
+% --- Journal ('jou') outputs something similar to a common journal format - double columned text and figurs in place. This can be fun, especially if you are sumbitting this as a writing sample in applications.
+% --- Document ('doc') outputs single columned, single spaced text with figures in place. Another option for producing a more polished looking document as a writing sample.
+% - 12pt: sets the font size to 12pt. Other options are 10pt or 11pt
+% - floatsintext: makes it so tables and figures will appear in text rather than at the end. Unforunately, not having this option set breaks the whole document, and I haven't been able to figure out why. IT's GREAT WHEN THINGS WORK LIKE THEY'RE SUPPOSED TO.
+
+\usepackage[american]{babel}
+\usepackage{amsmath}
+
+\usepackage{csquotes} % One of the things you learn about LaTeX is at some level, it's like magic. The references weren't printing as they should without this line, and the guy who wrote the package included it, so here it is. Because LaTeX reasons.
+\usepackage[style=apa,sortcites=true,sorting=nyt,backend=biber]{biblatex}
+% biblatex: loads the package that will handle the bibliographic info. Other option is natbib, which allows for more customization
+% - style=apa: sets the reference format to use apa (albeit the 6th edition)
+\DeclareLanguageMapping{american}{american-apa} % Gotta make sure we're patriotic up in here. Seriously, though, there can be local variants to how citations are handled, this sets it to the American idiosyncrasies 
+\addbibresource{bibliography.bib} % This is the companion file to the main one you're writing. It contains all of the bibliographic info for your references. It's a little bit of a pain to get used to, but once you do, it's the best. Especially if you recycle references between papers. You only have to get the pieces in the holes once.`
+\setlength{\headheight}{14.49998pt}
+\usepackage[T1]{fontenc} 
+\usepackage{mathptmx} % This is the Times New Roman font, which was the norm back in my day. If you'd like to use a different font, the options are laid out here: https://www.overleaf.com/learn/latex/Font_typefaces
+% Alternately, you can comment out or delete these two commands and just use the Overleaf default font. So many choices!
+
+
+% Title page stuff _____________________
+\title{The Interplay of Race/Ethnicity and Parental Education in Educational Attainment: A Cohort Analysis} % The big, long version of the title for the title page
+\shorttitle{The Interplay of Race/Ethnicity \& Parental Education} % The short title for the header
+\author{Christopher Byrd}
+\date{February 13, 2026}
+% \date{January 17, 2024} The student version doesn't use the \date command, for whatever reason
+\authorsaffiliations{Whitworth University}
+
+\abstract{Educational attainment is a key predictor of life outcomes. Despite this, access to opportunity within the American education system remains inequitable. This study examines how the intersectionality of race/ethnicity and parental education shape educational attainment among U.S. adults born between 1980 and 1984, using data from the National Longitudinal Survey of Youth 1997 (NLSY97). Prior research has highlighted racial disparities in school funding, disciplinary outcomes, and postsecondary access, as well as the effects of parental education on individual success. However, the interaction between the aforementioned variables remains under-explored in cohort-based analyses. This study applied multiple imputation and proportional odds ordinal logistic regression to model how educational attainment of residential parents, combined with race, influenced respondents’ highest educational outcome completed by ages 33–37. Results indicate that while increased parental education is positively correlated with respondent educational attainment overall, the strength of this relationship varies significantly by race/ethnicity-parental interactions. Notably, Hispanic respondents demonstrated higher baseline odds of attainment but received smaller marginal benefits from increased parental education.}
+
+\keywords{Educational Attainment, Structural Inequality, Race, Parental Education} % If you need to have keywords for your paper, delete the % at the start of this line
+
+\begin{document}
+\maketitle % This tells LaTeX to make the title page
+\leftheader{The Interplay of Race/Ethnicity \& Parental Education}
+
+\section{Introduction}
+
+School serves as one of the most important institutions within an individual’s life, affecting development and socialization \parencite[p.551-555]{conley_you_2019}. Throughout this experience, students of color are subjected to ethnic-racial discrimination. According to the UN Human Rights Office of the High Commissioner (OHCHR) (1965), ethnic-racial discrimination refers to negative behaviors experienced by individuals who identify as people of color. The effects of this discrimination are varied in reach and impact, from educational outcomes to adjustment within a school environment \parencite{bottiani_multilevel_2017, del_toro_when_2024, pearman_collective_2022}.
+
+Additionally, research into discrimination by Kimberlé Williams Crenshaw
+
+Of particular interest to this paper is how societal forces and structures effect differing educational outcomes, particularly with regard to parental educational achievement and ethnic-racial discrimination. Specifically, this analysis looks to answer the following question: among U.S. adults born from 1980 to 1984, how does the intersection of race/ethnicity and parental education affect the highest educational milestone completed by ages 33-37? This question is of particular interest as educational inequality is rampant in the United States and can affect all facets of life, from wealth to health \parencite{zajacova_relationship_2018, lurie_mechanisms_2021}. To answer this question, data from the National Longitudinal Survey of Youth 1997 (NLSY97) was analyzed utilizing proportional odds logistic equations.
+
+\section{The Literature}
+\subsection{Availability of Resources}
+The degree to which students and educators have access to resources significantly impacts student outcomes. \textcite{condron_disparities_2003} found a positive correlation between school spending and test scores, with schools serving predominantly minority and low-income populations consistently underfunded. Looking to the \textcite{national_center_for_education_statistics_concentration_2023}, over 30\% of Hispanic, Black, and Native students attend low-income schools, compared to only 7\% of White students. This stark disparity is often attributed to broader patterns of social stratification within U.S. society, with concrete examples within California’s education system (\parencite{reed_educational_nodate, kozol_savage_1991}).
+
+\textcite{oakes_multiplying_1990} argued that these inequities arise because inner-city schools lack the political influence needed to secure adequate funding. As a result, schools with predominantly minority student populations often face severe resource deficits in science, limiting access to experienced teachers, adequate facilities, and technology necessary for academic success. It’s notable that this article was preempted by a need for human capital—more workers in science and technology—and only partially driven by the intent to discover racial inequities.
+
+\subsection{Belonging Within Schools}
+\textcite{bottiani_multilevel_2017} completed a study that showed that gaps between White and Black students within out-of-school suspension (OSS) had a significant negative correlation on sense of belonging within a Black student's school. Alongside this was a positive correlation in adjustment problems with higher Black suspension rates. A higher low-SES population within a school also contributed to these findings, highlighting the importance of resources in student success. \textcite{king_examination_2011} found the opposite: school discipline had no effect on belonging and outcomes based upon race. This study is limited in effect, however, as it only examines whether there was discipline. There was no analysis of gaps based upon race.
+
+\textcite{georgiades_emotional_2013} provided an interesting set of results in their study on belonging in school, emotional issues, and adjustment issues related to racial congruence and immigration generational status. For Asian and White students, an increase in congruence resulted in a negative correlation on behavioral problems, while the opposite was true for Black students (all groups being 3rd-generation immigrants). For emotional problems, we see a negative correlation for White and Black students when congruence increases, but a positive correlation for Asian students. The overall effects of congruence are very mixed. However, they are attenuated significantly by a sense of belonging, as this contributes directly to emotional and behavioral adjustment. That is to say, a sense of not belonging explains emotional and behavioral issues at a statistically significant level when a positive correlation is observed, rather than congruence.
+
+Both studies contain parallels to critical race theory (CRT) and strain theory \parencite{bottiani_multilevel_2017, georgiades_emotional_2013, delgado_critical_2020}. Looking upon CRT, systemic inequalities, whether it be unequal representation in the student body, school punishment, or economic resources, increase racially divided outcomes in school performance, perpetuating negative stereotypes and increasing inequalities outside of schooling environments. Within strain theory, the pressures of belonging and increased punishment create strain upon students psyches, resulting in the findings of \textcite{georgiades_emotional_2013}.
+
+\subsection{School Achievement}
+\subsubsection{Testing in Primary and Secondary Settings}
+The Black-White score gap is a numerical manifestation of systemic inequities within education and society. \textcite{pearman_collective_2022} found that Black students are performing upwards of 0.5 standard deviations (SD) worse than their White peers, with this increasing modestly (0.1-0.2 SDs) with a SD of 1 or more with regard to county-level implicit and explicit bias. \textcite{del_toro_when_2024} found similarly that racist encounters with an educator, specifically in math, lead to lower test scores in both victimized students and students aware of the aggression. Students experiencing vicarious discrimination were subject to even lower scores than students directly affected, though the converse is true for class grades.
+
+The score gap is also directly related to resources, where every additional \$1,000 in funding per student accounts for a subject-dependent increase of 6\%-10\% on state-administered standardized tests \parencite{condron_disparities_2003, reed_educational_nodate}. \textcite{reed_educational_nodate} found that clearance rates for the 10th grade exit test in California were appreciably lower in every race except Asians when compared to White students. Furthermore, over half of all Hispanic students were in low-performing schools, where there were 7\% fewer properly credentialed educators on staff.
+
+\subsubsection{Post-Secondary Achievement and Family}
+\textcite{reed_educational_nodate} found data supporting the concept that generational achievement affects outcomes for minority students. There is a correlation between the completion of secondary and post-secondary education by a mother and their four-year-old's likelihood to attend early childhood education (ECE) programs. According to \textcite{jones_benefits_2024},  there are significant benefits associated with attendance of ECE programs, amounting to higher wages and higher completion of education. As this is a capstone article, there are some issues, but it has been accepted by CSUMB into their digital commons; hence, its inclusion.
+
+Moving back towards \textcite{reed_educational_nodate}, she finds that attenuating factors include general SES level, though SES is predicated often upon academic achievement. The general trend shows a vicious cycle of lower educational outcomes begetting lower educational outcomes. \textcite{assari_parental_2018} undertook a very similar study to the current one, finding that between Black and non-Hispanic White individuals, educational attainment was greater for White individuals, but educational mobility was higher for Black individuals. Furthermore, Assari included covariates for gender, finding these effects only occurred for female respondents.
+
+\subsection{Theoretical Framework}
+\subsubsection{Racial/Ethnic Generational Achievement}
+A preeminent theory that attempts to explain segmentation in immigrant class outcomes and mobility is segmented assimilation theory, proposed by \textcite{portes_new_1993}. In their paper, Portes and Zhou examined second-generation immigrant households, arguing that not all immigrant groups follow the same upward trajectory of class mobility. Instead, assimilation pathways are shaped by numerous structural factors, such as race and community support structures. This often leads to outcomes that diverge in effects, from downward class mobility to assimilation of cultural ideas. This theory provides a valuable framework from which to observe the impact and effects of generational achievement. In particular, it helps explain how generational achievement may impact educational attainment differently depending on the social and institutional context in which families are embedded.
+
+\subsubsection{Compounding Inequalities}
+
+
+\subsection{Parental Education}
+How to quantify parental education is a matter of intense debate within the social sciences. A number of methods exist, ranging from averaging to taking the maximum value.
+
+\subsection{Hypothesis}
+From the available research and theory, the expected outcome of the current study is that higher levels of parental education and being White will lead to increased educational outcomes, while the converse is true for lower parental education and individuals who are of a race/ethnicity other than White.
+
+\section{Methods}
+\subsection{NLSY97 Survey Design, Sampling, and Participants}
+As previously described, the sample used was the NLSY97 conducted by the US Bureau of Labor Statistics (BLS) (2024)\nocite{noauthor_nlsy97_nodate}. This is a nationally representative sample carried out every year pre-2011 and every two years thereafter, with selection finalized in 1997 and round 1 of questions carried out in 1998. This database was chosen due to the large sample size (n = \textasciitilde8,000 respondents), robust and comprehensive question selection, representative nature, and ease of access.
+
+Individuals were chosen who were born between 1980 and 1984. At the time of first interviews, respondents’ were ages 12 to 16. The sampling strategy, as described by the BLS, is as follows:
+\begin{quote}
+    “The NLSY97 cohort was selected in two phases... In the first phase, a list of housing units for the cross-sectional sample and the over-sample was derived from two independently selected, stratified multistage area probability samples. This ensured an accurate representation of different sections of the population defined by race, income, region, and other factors. In the second phase, sub-samples of the eligible persons identified in the first phase were selected for interview.”
+\end{quote}
+The cross-sectional sample was used for all data analysis. Further information about the NLSY97 is available on the NLS website (2024).
+
+\subsubsection{Education}
+Within the NLSY97 (2024), the data was subset to specify participants in round 18 who responded with an answer to the following question: “[What is] the highest degree received as of the survey date?” This was on a scale of 0 to 7, with zero representing no high school completion and 7 representing a professional degree. All responses falling outside this range (non-interviews and invalid skips for respondents, ungraded for parents) were removed. This accounted for n = 2283, with most being non-cross-sectional respondents. Important to note is the difference in scales between parental and respondent education levels (see appendix A, fig. A \& B for the complete codebook).
+
+For parental education, multiple approaches were considered. An analysis with parental education kept separate (additive effects) was tested but yielded results with high collinearity, suppression effects, and extremely high Variance Inflation Factor (VIF). For this reason, parental education was coded as the maximum between each residential pair. Where a residential parent was missing, education was coded as the education of the present parent. Residential was chosen over biological, as the present study is concerned about the social power of education, not possible biological factors.
+
+\subsubsection{Race and Ethnicity}
+The NLSY97 offers a number of variables encoding race and/or ethnicity. For this analysis, the race/ethnicity key variable from round 1 was utilized. Round 4 contains seven dummy variables encoding race for the cross-sectional sample; however, this increases the number of covariates sizeably and is interviewer-identified, whereas round 1 is self-identified. By forgoing the data from round 4, overfitting and implicit interviewer bias are avoided.
+
+\subsection{Data Analysis}
+A unique aspect of the data that made analysis more complex was the number of answers missing from the residential parent’s educational attainment variable (round 1) (see appendix for codebook). Residential parent (separated into mother and father - coded as "mom" and "dad") was chosen, as this study is attempting to discover how parents living in the same household affect their children's future education. Figure 4 presents the missing data using an upset plot. After combining mother and father HGC to a single variable, missingness was reduced to 9\%; however, imputation has been shown to produce better analyses than casewise deletion, especially when the data is MCAR or missing at random (MAR) \parencite{afghari_contrasting_2019}. Thus, the decision to continue using imputations was made. To determine whether the pattern was random, Jamshidian and Jalal's (2010)\nocite{jamshidian_tests_2010} non-parametric missing completely at random (MCAR) test was used. Following this, data was imputed using the MICE package, which utilizes Gibbs sampling. The imputation method chosen was predictive mean matching (PMM), as PMM provides plausible data that is robust given multiple data types \parencite{buuren_flexible_2021}.
+
+Prior to imputation, three dummy variables were coded (figure B) for race/ethnicity, with non-Black/non-Hispanic as the reference variable. Once the imputation was completed, a proportional ordinal logistic regression was run on each imputation (a total of 5 imputations were created) and pooled together to create table 2 and figures 6 and 7. Due to convergence issues, an initial model was ran without weights to provide a starting point for the weighted model. ggplot2 was used to construct all plots within the document due to its wealth of documentation, plethora of packages expanding on its functionality, and its flexibility. The following regression equation was used:
+\begin{multline}
+    Highest Degree = HGCParent * Black+ \\
+    HGCParent*Hispanic + HGCParent*Mixed
+\end{multline}
+The last step taken was to fit a weighted general linear model (GLM) on an imputation using the `survey` package. The above equation was utilized in this regression. This GLM helps illustrate possible outcomes and variations within the imputations, alongside allowing weighting, which `mice` lacks support for.
+
+\subsubsection{Limitations}
+As previously noted, imputations can introduce error into analyses from inconsistent, variable data, possibly affecting results. However, given the percent of missing and density graph, there is sufficient evidence to support the quality of the imputation.
+
+Additionally, GED and HS are interpreted as discrete ordinal categories, with GED placed below HS. While societally they may be seen as different, practically, they hold the same functional distinction. On the other hand, a PhD and a professional degree were collapsed into a single level (level 7). See Study Limitations.
+
+\section{Results}
+\subsection{Descriptive Statistics}
+
+In total, 6701 individuals were included in the analysis from a possible 8,984. \ref{fig:OverallEffect}.
+
+\begin{table}
+    \caption{Number of respondents and highest grade completed by race}
+    \centering
+    \begin{tabular}{cccc}
+        \hline
+        Race  & \textit{n} & Mean & SD \\
+        \hline
+        Black & 2          & 3    & 5  \\
+              & 2          & 3    & 5  \\
+        White & 3          & 4    & 6  \\
+    \end{tabular}
+    \label{tab:Descriptive Statistics}
+\end{table}
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{sampleFig.png} % This is setting the figure to be .75x the width of the line. This can go all the way from 0.1 to 1 (and beyond, but then you're outside the page).
+    \caption{The mean vibes for each word type and counterbalanced condition order. Error bars represent one standard error of the mean.}
+    \label{fig:OverallEffect}
+\end{figure}
+
+\subsection{Inferential Statistics}
+
+Analytical words.
+
+\section{Discussion}
+
+Discussion words.
+
+
+\printbibliography
+
+\end{document}
+
+%% 
+%% Copyright (C) 2019 by Daniel A. Weiss <daniel.weiss.led at gmail.com>
+%% 
+%% This work may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License (LPPL), either
+%% version 1.3c of this license or (at your option) any later
+%% version.  The latest version of this license is in the file:
+%% 
+%% http://www.latex-project.org/lppl.txt
+%% 
+%% Users may freely modify these files without permission, as long as the
+%% copyright line and this statement are maintained intact.
+%% 
+%% This work is not endorsed by, affiliated with, or probably even known
+%% by, the American Psychological Association.
+%% 
+%% This work is "maintained" (as per LPPL maintenance status) by
+%% Daniel A. Weiss.
+%% 
+%% This work consists of the file  apa7.dtx
+%% and the derived files           apa7.ins,
+%%                                 apa7.cls,
+%%                                 apa7.pdf,
+%%                                 README,
+%%                                 APA7american.txt,
+%%                                 APA7british.txt,
+%%                                 APA7dutch.txt,
+%%                                 APA7english.txt,
+%%                                 APA7german.txt,
+%%                                 APA7ngerman.txt,
+%%                                 APA7greek.txt,
+%%                                 APA7czech.txt,
+%%                                 APA7turkish.txt,
+%%                                 APA7endfloat.cfg,
+%%                                 Figure1.pdf,
+%%                                 shortsample.tex,
+%%                                 longsample.tex, and
+%%                                 bibliography.bib.
+%% 
+%%
+%%
+%% This is file `./samples/shortsample.tex',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% apa7.dtx  (with options: `shortsample')
+%% ----------------------------------------------------------------------
+%% 
+%% apa7 - A LaTeX class for formatting documents in compliance with the
+%% American Psychological Association's Publication Manual, 7th edition
+%% 
+%% Copyright (C) 2019 by Daniel A. Weiss <daniel.weiss.led at gmail.com>
+%% 
+%% This work may be distributed and/or modified under the
+%% conditions of the LaTeX Project Public License (LPPL), either
+%% version 1.3c of this license or (at your option) any later
+%% version.  The latest version of this license is in the file:
+%% 
+%% http://www.latex-project.org/lppl.txt
+%% 
+%% Users may freely modify these files without permission, as long as the
+%% copyright line and this statement are maintained intact.
+%% 
+%% This work is not endorsed by, affiliated with, or probably even known
+%% by, the American Psychological Association.
+%% 
+%% ----------------------------------------------------------------------

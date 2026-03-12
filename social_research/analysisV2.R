@@ -1,3 +1,5 @@
+# Complete all new work here.
+
 # Run "./data/new_data97-educational-data/new_data97-educational-data.R" first.
 # This file runs analyses on two rounds of the NLSY97 data set. The README
 # Things may/will break if you don't clear the data pane between executions.
@@ -26,15 +28,16 @@ library(colorspace)
 # library(viridis)
 # library(ggpmisc)
 library(naniar)
+library(car)
 library(mice)
 library(survey)
 library(MissMech)
 library(papaja)
 library(VIM)
 library(effects)
-library(car)
 library(visdat)
 library(stargazer)
+library(Hmisc)
 
 if (
   Sys.info()['sysname'] == "Linux" && basename(getwd()) != "social_research"
@@ -86,7 +89,16 @@ new_data <- new_data %>%
   mutate(
     degree_label = factor(
       degree_label,
-      levels = c("None", "GED", "HS Diploma", "AA", "BA", "MA", "PhD")
+      levels = c(
+        "None",
+        "GED",
+        "HS Diploma",
+        "AA",
+        "BA",
+        "MA",
+        "PhD",
+        ordered = TRUE
+      )
     )
   )
 
@@ -136,24 +148,14 @@ ggsave(
 ggplot(new_data_rmNA, aes(x = CV_HGC_RES_MOM_1997)) +
   geom_bar(fill = "lightblue") +
   labs(x = "Degree") +
-  stat_count(
-    geom = 'text',
-    color = 'black',
-    aes(label = after_stat(count)),
-    position = position_stack(vjust = 1.05)
-  ) +
+  facet_wrap(~race, scales = "free_y") +
   theme_apa()
 
 #title = "Highest Degree Attained (Father)"
 ggplot(new_data_rmNA, aes(x = CV_HGC_RES_DAD_1997)) +
   geom_bar(fill = "lightpink") +
   labs(x = "Degree") +
-  stat_count(
-    geom = 'text',
-    color = 'black',
-    aes(label = after_stat(count)),
-    position = position_stack(vjust = 1.05)
-  ) +
+  facet_wrap(~race, scales = "free_y") +
   theme_apa()
 
 
@@ -216,7 +218,8 @@ new_data_rmNA <- new_data_rmNA %>%
   mutate(
     DV_RACE_BLACK = ifelse(KEY_RACE_ETHNICITY_1997 == 1, 1, 0),
     DV_RACE_HISPANIC = ifelse(KEY_RACE_ETHNICITY_1997 == 2, 1, 0),
-    DV_RACE_MIXED = ifelse(KEY_RACE_ETHNICITY_1997 == 3, 1, 0)
+    DV_RACE_MIXED = ifelse(KEY_RACE_ETHNICITY_1997 == 3, 1, 0),
+    HGCParentEd = pmax(CV_HGC_RES_DAD_1997, CV_HGC_RES_MOM_1997, na.rm = TRUE)
   )
 
 ##########  Imputations ##########
@@ -228,25 +231,23 @@ imp_data <- new_data_rmNA %>%
     DV_RACE_MIXED,
     DV_RACE_HISPANIC,
     DV_RACE_BLACK,
-    CV_HGC_RES_MOM_1997,
-    CV_HGC_RES_DAD_1997,
+    HGCParentEd,
     SAMPLING_WEIGHT_CC_2017
   )
 
-# Turn off/on predictor matrix imputation
-use_predictor_matrix <- TRUE
+# Turn off/on predictor matrix imputation. Put in a random string to test polr w/out imp
+use_predictor_matrix <- "TRUE"
 
-if (use_predictor_matrix == FALSE) {
+if (use_predictor_matrix == TRUE) {
   # Imp w/ predictor matrix
   # See notes for matrix definition
   impPredictorMatrix <- rbind(
-    c(rep(0, 7)), #1
-    c(rep(0, 7)), #2
-    c(rep(0, 7)), #3
-    c(rep(0, 7)), #4
-    c(1, 1, 1, 1, 0, 1, 0), #5 - Predictors for HGC Mom
-    c(1, 1, 1, 1, 1, 0, 0), #6 - Predictors for HGC Dad
-    c(rep(0, 7)) #7
+    c(rep(0, 6)), #1
+    c(rep(0, 6)), #2
+    c(rep(0, 6)), #3
+    c(rep(0, 6)), #4
+    c(1, 1, 1, 1, 0, 1), #5 - Predictors for ParentEd
+    c(rep(0, 6)) #7
   )
 
   impPred <- mice(
@@ -257,10 +258,92 @@ if (use_predictor_matrix == FALSE) {
     seed = 1234
   )
   imp <- complete(impPred, action = "long", include = TRUE)
-} else {
+} else if (use_predictor_matrix == FALSE) {
   # Imp w/o predictor matrix. Used in paper
   imp <- mice(imp_data, m = 5, method = 'pmm', seed = 1234)
   imp <- complete(imp, action = "long", include = TRUE)
+} else {
+  print("No imputation being used!")
+
+  imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
+    imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017,
+    levels = 0:6,
+    labels = c("None", "GED", "HS", "AA", "BA", "MA", "PhD"),
+    ordered = TRUE
+  )
+
+  # Provides starting point to allow convergence of model 2.
+  m1 <- polr(
+    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+      HGCParentEd *
+      DV_RACE_BLACK +
+      HGCParentEd * DV_RACE_HISPANIC +
+      HGCParentEd * DV_RACE_MIXED,
+    imp_data,
+    Hess = TRUE
+  )
+  m1.1 <- tidy(m1, conf.int = TRUE, conf.level = 0.95)
+
+  startdf <- c(m1$coefficients, m1$zeta)
+
+  m2 <- polr(
+    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+      HGCParentEd *
+      DV_RACE_BLACK +
+      HGCParentEd * DV_RACE_HISPANIC +
+      HGCParentEd * DV_RACE_MIXED,
+    imp_data,
+    weights = SAMPLING_WEIGHT_CC_2017,
+    start = startdf,
+    Hess = TRUE
+  )
+
+  m2.1 <- tidy(m2, conf.int = TRUE, conf.level = 0.95)
+
+  expOR <- c(exp(m2.1$estimate[1:7]), rep(0, 6))
+  m2.1sum <- m2.1
+
+  m2.1sum %>% print()
+
+  termFilter <- c(
+    "HGCParentEd",
+    "DV_RACE_MIXED",
+    "DV_RACE_HISPANIC",
+    "DV_RACE_BLACK",
+    "HGCParentEd:DV_RACE_BLACK",
+    "HGCParentEd:DV_RACE_HISPANIC",
+    "HGCParentEd:DV_RACE_MIXED"
+  )
+
+  m1.1sub <- m1.1 %>%
+    filter(
+      term %in% termFilter
+    )
+
+  plot1 <- ggplot(m1.1sub, aes(x = estimate, y = reorder(term, estimate))) +
+    geom_point() +
+    geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    labs(x = "Log Odds Estimate", y = "Predictor Estimate") +
+    theme_apa()
+
+  plot1 %>% print()
+
+  m2.1sub <- m2.1 %>%
+    filter(
+      term %in% termFilter
+    )
+
+  plot2 <- ggplot(m2.1sub, aes(x = estimate, y = reorder(term, estimate))) +
+    geom_point() +
+    geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    labs(x = "Log Odds Estimate", y = "Predictor Estimate") +
+    theme_apa()
+
+  plot2 %>% print()
+
+  stop("End of sensitivity test")
 }
 
 # Factors imputations
@@ -283,50 +366,25 @@ long_imp <- long_imp %>%
   mutate(.id = as.integer(.id)) %>%
   group_by(.imp) %>%
   mutate(
-    mom_missing = is.na(imp_data$CV_HGC_RES_MOM_1997),
-    dad_missing = is.na(imp_data$CV_HGC_RES_DAD_1997)
+    parentMissing = is.na(imp_data$HGCParentEd),
   ) %>%
   ungroup()
 
 # Facilitates faceting
-long_faceted <- long_imp %>%
+long_flaged <- long_imp %>%
   dplyr::select(
     .imp,
-    CV_HGC_RES_MOM_1997,
-    CV_HGC_RES_DAD_1997,
-    mom_missing,
-    dad_missing
-  ) %>%
-  pivot_longer(
-    cols = starts_with("CV_HGC_RES_"),
-    names_to = "parent_var",
-    values_to = "hgc"
-  ) %>%
-  mutate(
-    missing_flag = case_when(
-      parent_var == "CV_HGC_RES_MOM_1997" & mom_missing ~ "Imputed",
-      parent_var == "CV_HGC_RES_DAD_1997" & dad_missing ~ "Imputed",
-      TRUE ~ "Observed"
-    )
+    HGCParentEd,
+    parentMissing
   )
 
 p <- ggplot(
-  long_faceted,
-  aes(x = hgc, fill = missing_flag, color = missing_flag)
+  long_flaged,
+  aes(x = HGCParentEd, fill = parentMissing, color = parentMissing)
 ) +
   geom_density(alpha = 0.3) +
-  facet_wrap(
-    ~parent_var,
-    scales = "free_y",
-    labeller = as_labeller(
-      c(
-        "CV_HGC_RES_MOM_1997" = "Mother's Education",
-        "CV_HGC_RES_DAD_1997" = "Father's Education"
-      )
-    )
-  ) +
-  scale_fill_manual(values = c("Observed" = "blue", "Imputed" = "red")) +
-  scale_color_manual(values = c("Observed" = "blue", "Imputed" = "red")) +
+  scale_fill_manual(values = c("TRUE" = "blue", "FALSE" = "red")) +
+  scale_color_manual(values = c("TRUE" = "blue", "FALSE" = "red")) +
   labs(
     x = "Highest Grade Completed",
     y = "Density",
@@ -350,16 +408,18 @@ ggsave(
 
 ########## POLR ##########
 
+# Provide start to allow convergence
+polrImp <- complete(imp, action = 1L)
+
 # Runs ordinal logit on imp data
 pom_imp <- with(
   imp,
   polr(
-    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ CV_HGC_RES_MOM_1997:DV_RACE_BLACK +
-      CV_HGC_RES_MOM_1997:DV_RACE_HISPANIC +
-      CV_HGC_RES_MOM_1997:DV_RACE_MIXED +
-      CV_HGC_RES_DAD_1997:DV_RACE_BLACK +
-      CV_HGC_RES_DAD_1997:DV_RACE_HISPANIC +
-      CV_HGC_RES_DAD_1997:DV_RACE_MIXED,
+    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+      HGCParentEd *
+      DV_RACE_BLACK +
+      HGCParentEd * DV_RACE_HISPANIC +
+      HGCParentEd * DV_RACE_MIXED,
     Hess = TRUE
   )
 )
@@ -368,46 +428,41 @@ pom_imp <- with(
 pom_pooled <- pool(pom_imp)
 summary(pom_pooled)
 
+oddRatio <- list()
+oddRatio$Term <- pom_pooled$pooled$term
+oddRatio$OR <- exp(pom_pooled$pooled$estimate)
+oddRatio$Sig <- summary(pom_pooled)$p.value
+as.data.frame(oddRatio)
+
 # Converting pooled results to tidy format
 pooled_summary <- summary(pom_pooled)
 
 # Adding term names
 tidy_pooled <- tidy(pom_pooled, conf.int = TRUE, conf.level = 0.95)
 
-tidy_pooled_sub <- tidy_pooled %>%
-  dplyr::filter(
-    term %in%
-      c(
-        "CV_HGC_RES_MOM_1997",
-        "DV_RACE_BLACK",
-        "DV_RACE_HISPANIC",
-        "DV_RACE_MIXED",
-        "CV_HGC_RES_DAD_1997",
-        "CV_HGC_RES_MOM_1997:DV_RACE_BLACK",
-        "CV_HGC_RES_MOM_1997:DV_RACE_HISPANIC",
-        "CV_HGC_RES_MOM_1997:DV_RACE_MIXED",
-        "DV_RACE_BLACK:CV_HGC_RES_DAD_1997",
-        "DV_RACE_HISPANIC:CV_HGC_RES_DAD_1997",
-        "DV_RACE_MIXED:CV_HGC_RES_DAD_1997"
-      )
-  )
-
-tidy_pooled_sub <- tidy_pooled_sub %>%
+tidy_pooled <- tidy_pooled %>%
   mutate(
     term = dplyr::recode(
       term,
-      "CV_HGC_RES_MOM_1997" = "HGC_Mom",
-      "CV_HGC_RES_DAD_1997" = "HGC_Dad",
       "DV_RACE_BLACK" = "Black",
       "DV_RACE_HISPANIC" = "Hispanic",
       "DV_RACE_MIXED" = "Mixed",
-      "CV_HGC_RES_MOM_1997:DV_RACE_BLACK" = "HGC_Mom:Black",
-      "CV_HGC_RES_MOM_1997:DV_RACE_HISPANIC" = "HGC_Mom:Hispanic",
-      "CV_HGC_RES_MOM_1997:DV_RACE_MIXED" = "HGC_Mom:Mixed",
-      "DV_RACE_BLACK:CV_HGC_RES_DAD_1997" = "Black:HGC_Dad",
-      "DV_RACE_HISPANIC:CV_HGC_RES_DAD_1997" = "Hispanic:HGC_Dad",
-      "DV_RACE_MIXED:CV_HGC_RES_DAD_1997" = "Mixed:HGC_Dad"
     )
+  )
+
+termFilter <- c(
+  "HGCParentEd",
+  "Black",
+  "Hispanic",
+  "Mixed",
+  "HGCParentEd:DV_RACE_BLACK",
+  "HGCParentEd:DV_RACE_HISPANIC",
+  "HGCParentEd:DV_RACE_MIXED"
+)
+
+tidy_pooled_sub <- tidy_pooled %>%
+  filter(
+    term %in% termFilter
   )
 
 # Plot for predictors
@@ -420,7 +475,7 @@ ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
   theme_apa()
 
 ggsave(
-  filename = "coefficientplot1.png",
+  filename = "coefficientplot2.1.png",
   plot = last_plot(),
   scale = 1,
   device = "png",
@@ -431,23 +486,9 @@ ggsave(
 )
 
 tidy_pooled_sub <- tidy_pooled %>%
-  dplyr::filter(
-    !term %in%
-      c(
-        "CV_HGC_RES_MOM_1997",
-        "DV_RACE_BLACK",
-        "DV_RACE_HISPANIC",
-        "DV_RACE_MIXED",
-        "CV_HGC_RES_DAD_1997",
-        "CV_HGC_RES_MOM_1997:DV_RACE_BLACK",
-        "CV_HGC_RES_MOM_1997:DV_RACE_HISPANIC",
-        "CV_HGC_RES_MOM_1997:DV_RACE_MIXED",
-        "DV_RACE_BLACK:CV_HGC_RES_DAD_1997",
-        "DV_RACE_HISPANIC:CV_HGC_RES_DAD_1997",
-        "DV_RACE_MIXED:CV_HGC_RES_DAD_1997"
-      )
+  filter(
+    !term %in% termFilter
   )
-
 # Plot for thresholds
 # title = "Pooled Coefficient Estimates from Imputed polr Model"
 ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
@@ -458,7 +499,7 @@ ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
   theme_apa()
 
 ggsave(
-  filename = "coefficientplot2.png",
+  filename = "coefficientplot2.2.png",
   plot = last_plot(),
   scale = 1,
   device = "png",
@@ -470,16 +511,16 @@ ggsave(
 
 # define threshold cutoffs
 thresholds <- c(
-  "None|GED" = 1.78574,
-  "GED|HS" = 3.00156,
-  "HS|AA" = 5.05602,
-  "AA|BA" = 5.53610,
-  "BA|MA" = 7.18690,
-  "MA|PhD" = 9.82104
+  "None|GED" = 1.29835,
+  "GED|HS" = 2.50778,
+  "HS|AA" = 4.54876,
+  "AA|BA" = 5.02543,
+  "BA|MA" = 6.66202,
+  "MA|PhD" = 9.28300
 )
 
 # Create a sequence of linear predictor values (e.g., effects of covariates)
-x_vals <- seq(-5, 15, length.out = 500)
+x_vals <- seq(-5, 20, length.out = 500)
 
 # Compute cumulative probabilities using logistic (sigmoid) function
 logistic <- function(x) 1 / (1 + exp(-x))
@@ -506,6 +547,7 @@ dfc <- dfc %>%
 # plot
 ggplot(dfc, aes(x = x, y = Probability, color = Education_Level)) +
   geom_line(linewidth = 0.78) +
+  xlim(-0.5, 20) +
   labs(x = "Linear Predictor", y = "Probability", color = "Education Level") +
   theme_apa()
 
@@ -519,6 +561,39 @@ ggsave(
   height = 4.5,
   units = "in"
 )
+
+off <- TRUE
+
+if (off == FALSE) {
+  #### Some POLR Diagnostics for parallel slopes assumption ####
+
+  sf <- function(y) {
+    c(
+      'Y>=1' = qlogis(mean(y >= 1)),
+      'Y>=2' = qlogis(mean(y >= 2)),
+      'Y>=3' = qlogis(mean(y >= 3)),
+      'Y>=4' = qlogis(mean(y >= 4)),
+      'Y>=5' = qlogis(mean(y >= 5)),
+      'Y>=6' = qlogis(mean(y >= 6)),
+      'Y>=7' = qlogis(mean(y >= 7))
+    )
+  }
+
+  # Get one completed dataset for the summary table
+  completed_imp <- complete(imp, 1)
+
+  # Use aggregate + custom function to get the same style of cutpoint logits
+  diag_tbl <- completed_imp |>
+    dplyr::mutate(y_num = as.numeric(CV_HIGHEST_DEGREE_EVER_EDT_2017)) |>
+    dplyr::summarise(
+      N = dplyr::n(),
+      across(y_num, ~ list(sf(.x))),
+      .by = c(HGCParentEd, DV_RACE_BLACK, DV_RACE_HISPANIC, DV_RACE_MIXED)
+    ) |>
+    tidyr::unnest_wider(y_num)
+
+  diag_tbl
+}
 
 ########## Survey ##########
 
@@ -543,13 +618,11 @@ svy_design <- svydesign(
 
 # Run weighted ordinal logistic regression using svyolr
 svy_model <- svyolr(
-  degree_num ~ CV_HGC_RES_MOM_1997 *
+  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+    HGCParentEd *
     DV_RACE_BLACK +
-    CV_HGC_RES_MOM_1997 * DV_RACE_HISPANIC +
-    CV_HGC_RES_MOM_1997 * DV_RACE_MIXED +
-    CV_HGC_RES_DAD_1997 * DV_RACE_BLACK +
-    CV_HGC_RES_DAD_1997 * DV_RACE_HISPANIC +
-    CV_HGC_RES_DAD_1997 * DV_RACE_MIXED,
+    HGCParentEd * DV_RACE_HISPANIC +
+    HGCParentEd * DV_RACE_MIXED,
   design = svy_design
 )
 
@@ -557,164 +630,3 @@ svy_model <- svyolr(
 print("==================")
 summary(svy_model)
 print("==================")
-
-######## Marginal effects graph ##########
-# Currently unused in paper
-
-for (i in c("CV_HGC_RES_MOM_1997", "CV_HGC_RES_DAD_1997")) {
-  gender <- ifelse(i == "CV_HGC_RES_MOM_1997", "Mother's", "Father's")
-
-  completed_data <- complete(imp, 5)
-
-  # Refit the polr model using that dataset (for effects to work)
-  polr_fit <- MASS::polr(
-    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ CV_HGC_RES_MOM_1997:DV_RACE_BLACK +
-      CV_HGC_RES_MOM_1997:DV_RACE_HISPANIC +
-      CV_HGC_RES_MOM_1997:DV_RACE_MIXED +
-      CV_HGC_RES_DAD_1997:DV_RACE_BLACK +
-      CV_HGC_RES_DAD_1997:DV_RACE_HISPANIC +
-      CV_HGC_RES_DAD_1997:DV_RACE_MIXED +
-      DV_RACE_BLACK +
-      DV_RACE_HISPANIC +
-      DV_RACE_MIXED +
-      CV_HGC_RES_MOM_1997 +
-      CV_HGC_RES_DAD_1997,
-    data = completed_data,
-    Hess = TRUE
-  )
-
-  # Get predicted probabilities across HGC_Mom for all race groups
-  effect_obj <- Effect(
-    focal.predictors = c(
-      i,
-      "DV_RACE_BLACK",
-      "DV_RACE_HISPANIC",
-      "DV_RACE_MIXED"
-    ),
-    mod = polr_fit,
-    xlevels = list(i = 0:20)
-  )
-
-  effect_df <- as.data.frame(effect_obj)
-
-  # Construct categorical race var for plotting
-  effect_df$Race <- with(
-    effect_df,
-    ifelse(
-      DV_RACE_BLACK == 1,
-      "Black",
-      ifelse(
-        DV_RACE_HISPANIC == 1,
-        "Hispanic",
-        ifelse(DV_RACE_MIXED == 1, "Mixed", "Non-Black/Non-Hispanic")
-      )
-    )
-  )
-
-  # Reshape the effect_df to long format for faceting
-  long_df <- effect_df %>%
-    pivot_longer(
-      cols = starts_with("prob."),
-      names_to = "degree",
-      names_prefix = "prob.",
-      values_to = "fit"
-    ) %>%
-    left_join(
-      effect_df %>%
-        pivot_longer(
-          cols = starts_with("L.prob."),
-          names_to = "degree",
-          names_prefix = "L.prob.",
-          values_to = "lower"
-        ),
-      by = c(i, "DV_RACE_BLACK", "DV_RACE_HISPANIC", "DV_RACE_MIXED", "degree")
-    ) %>%
-    left_join(
-      effect_df %>%
-        pivot_longer(
-          cols = starts_with("U.prob."),
-          names_to = "degree",
-          names_prefix = "U.prob.",
-          values_to = "upper"
-        ),
-      by = c(i, "DV_RACE_BLACK", "DV_RACE_HISPANIC", "DV_RACE_MIXED", "degree")
-    ) %>%
-    mutate(
-      Race = case_when(
-        DV_RACE_BLACK == 1 ~ "Black",
-        DV_RACE_HISPANIC == 1 ~ "Hispanic",
-        DV_RACE_MIXED == 1 ~ "Mixed",
-        TRUE ~ "Non-Black/Non-Hispanic"
-      )
-    )
-
-  long_df <- long_df %>%
-    group_by(Race, degree, !!sym(i)) %>%
-    summarise(
-      fit = mean(fit, na.rm = TRUE),
-      lower = mean(lower, na.rm = TRUE),
-      upper = mean(upper, na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      degree = factor(
-        degree,
-        levels = c("None", "GED", "HS", "AA", "BA", "MA", "PhD"),
-        ordered = TRUE
-      )
-    )
-
-  long_df1 <- long_df %>% filter(degree != "PhD")
-
-  print(
-    ggplot(long_df1, aes(x = !!sym(i), y = fit, color = Race, fill = Race)) +
-      geom_line(linewidth = 0.6) +
-      geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.15, color = NA) +
-      facet_wrap(~degree, scales = "free_y") +
-      labs(
-        title = paste(
-          "Predicted Probability of Educational Attainment by Race and",
-          gender,
-          "Education"
-        ),
-        x = paste(gender, "Highest Grade Completed"),
-        y = "Predicted Probability"
-      ) +
-      theme_apa()
-  )
-
-  long_df2 <- long_df %>%
-    dplyr::filter(degree == "PhD")
-
-  print(
-    ggplot(long_df2, aes(x = !!sym(i), y = fit, color = Race, fill = Race)) +
-      geom_line(linewidth = 0.6) +
-      geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.15, color = NA) +
-      labs(
-        title = paste(
-          "Predicted Probability of Educational Attainment by Race and",
-          gender,
-          "Education"
-        ),
-        x = paste(gender, "Highest Grade Completed"),
-        y = "Predicted Probability"
-      ) +
-      theme_apa()
-  )
-}
-
-##### The fixing things section #####
-
-# VIF
-
-vif(polr(
-  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
-    CV_HGC_RES_MOM_1997 *
-    DV_RACE_BLACK +
-    CV_HGC_RES_MOM_1997 * DV_RACE_HISPANIC +
-    CV_HGC_RES_MOM_1997 * DV_RACE_MIXED +
-    CV_HGC_RES_DAD_1997 * DV_RACE_BLACK +
-    CV_HGC_RES_DAD_1997 * DV_RACE_HISPANIC +
-    CV_HGC_RES_DAD_1997 * DV_RACE_MIXED,
-  data = complete(imp, action = 1L)
-))

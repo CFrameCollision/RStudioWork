@@ -1,3 +1,5 @@
+# DON'T TOUCH THIS SCRIPT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 # Run "./data/new_data97-educational-data/new_data97-educational-data.R" first.
 # This file runs analyses on two rounds of the NLSY97 data set. The README
 # Things may/will break if you don't clear the data pane between executions.
@@ -234,9 +236,9 @@ imp_data <- new_data_rmNA %>%
   )
 
 # Turn off/on predictor matrix imputation
-use_predictor_matrix <- TRUE
+use_predictor_matrix <- FALSE
 
-if (use_predictor_matrix == FALSE) {
+if (use_predictor_matrix == TRUE) {
   # Imp w/ predictor matrix
   # See notes for matrix definition
   impPredictorMatrix <- rbind(
@@ -354,12 +356,13 @@ ggsave(
 pom_imp <- with(
   imp,
   polr(
-    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~ CV_HGC_RES_MOM_1997:DV_RACE_BLACK +
-      CV_HGC_RES_MOM_1997:DV_RACE_HISPANIC +
-      CV_HGC_RES_MOM_1997:DV_RACE_MIXED +
-      CV_HGC_RES_DAD_1997:DV_RACE_BLACK +
-      CV_HGC_RES_DAD_1997:DV_RACE_HISPANIC +
-      CV_HGC_RES_DAD_1997:DV_RACE_MIXED,
+    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+      CV_HGC_RES_MOM_1997 *
+      DV_RACE_HISPANIC +
+      CV_HGC_RES_MOM_1997 * DV_RACE_MIXED +
+      CV_HGC_RES_DAD_1997 * DV_RACE_BLACK +
+      CV_HGC_RES_DAD_1997 * DV_RACE_HISPANIC +
+      CV_HGC_RES_DAD_1997 * DV_RACE_MIXED,
     Hess = TRUE
   )
 )
@@ -503,7 +506,6 @@ dfc <- dfc %>%
   dplyr::select(x, None, GED, HS, AA, BA, MA, PhD) %>%
   pivot_longer(-x, names_to = "Education_Level", values_to = "Probability")
 
-# plot
 ggplot(dfc, aes(x = x, y = Probability, color = Education_Level)) +
   geom_line(linewidth = 0.78) +
   labs(x = "Linear Predictor", y = "Probability", color = "Education Level") +
@@ -543,13 +545,14 @@ svy_design <- svydesign(
 
 # Run weighted ordinal logistic regression using svyolr
 svy_model <- svyolr(
-  degree_num ~ CV_HGC_RES_MOM_1997 *
-    DV_RACE_BLACK +
-    CV_HGC_RES_MOM_1997 * DV_RACE_HISPANIC +
+  degree_num ~
+    CV_HGC_RES_MOM_1997 *
+    DV_RACE_HISPANIC +
     CV_HGC_RES_MOM_1997 * DV_RACE_MIXED +
     CV_HGC_RES_DAD_1997 * DV_RACE_BLACK +
     CV_HGC_RES_DAD_1997 * DV_RACE_HISPANIC +
     CV_HGC_RES_DAD_1997 * DV_RACE_MIXED,
+  ,
   design = svy_design
 )
 
@@ -710,11 +713,11 @@ for (i in c("CV_HGC_RES_MOM_1997", "CV_HGC_RES_DAD_1997")) {
 vif(polr(
   CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
     CV_HGC_RES_MOM_1997 *
-    DV_RACE_BLACK +
-    CV_HGC_RES_MOM_1997 * DV_RACE_HISPANIC +
+    DV_RACE_HISPANIC +
     CV_HGC_RES_MOM_1997 * DV_RACE_MIXED +
     CV_HGC_RES_DAD_1997 * DV_RACE_BLACK +
     CV_HGC_RES_DAD_1997 * DV_RACE_HISPANIC +
     CV_HGC_RES_DAD_1997 * DV_RACE_MIXED,
+  ,
   data = complete(imp, action = 1L)
 ))
