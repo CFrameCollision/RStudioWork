@@ -96,9 +96,9 @@ new_data <- new_data %>%
         "AA",
         "BA",
         "MA",
-        "PhD",
-        ordered = TRUE
-      )
+        "PhD"
+      ),
+      ordered = TRUE
     )
   )
 
@@ -236,7 +236,7 @@ imp_data <- new_data_rmNA %>%
   )
 
 # Turn off/on predictor matrix imputation. Put in a random string to test polr w/out imp
-use_predictor_matrix <- "TRUE"
+use_predictor_matrix <- TRUE
 
 if (use_predictor_matrix == TRUE) {
   # Imp w/ predictor matrix. Used in paper
@@ -295,9 +295,10 @@ m2 <- polr(
     HGCParentEd * DV_RACE_MIXED,
   imp_data,
   weights = SAMPLING_WEIGHT_CC_2017,
-  start = startdf,
-  Hess = TRUE
+  Hess = TRUE,
+  maxit = 10000
 )
+startdf2 <- c(m2$coefficients, m2$zeta)
 
 m2.1 <- tidy(m2, conf.int = TRUE, conf.level = 0.95)
 
@@ -417,21 +418,6 @@ ggsave(
 
 ########## POLR ##########
 
-# Provide start to allow convergence
-polrImp <- complete(imp, action = 1L)
-
-mod2Seed <- polr(
-  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
-    HGCParentEd *
-    DV_RACE_BLACK +
-    HGCParentEd * DV_RACE_HISPANIC +
-    HGCParentEd * DV_RACE_MIXED,
-  polrImp,
-  Hess = TRUE
-)
-
-startdf <- c(mod2Seed$coefficients, mod2Seed$zeta)
-
 # Runs ordinal logit on imp data
 pom_imp <- with(
   imp,
@@ -441,9 +427,9 @@ pom_imp <- with(
       DV_RACE_BLACK +
       HGCParentEd * DV_RACE_HISPANIC +
       HGCParentEd * DV_RACE_MIXED,
-    weights = SAMPLING_WEIGHT_CC_2017,
-    start = startdf,
-    Hess = TRUE
+    start = startdf2,
+    Hess = TRUE,
+    weights = SAMPLING_WEIGHT_CC_2017
   )
 )
 
@@ -631,8 +617,8 @@ completed_data <- complete(imp, action = 1L)
 
 # Fixed after turning in, see svyglm.txt for code used in paper
 # Weighted OLR
-completed_data$degree_num <- factor(
-  completed_data$CV_HIGHEST_DEGREE_EVER_EDT_2017,
+imp_data$degree_num <- factor(
+  imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017,
   levels = c("None", "GED", "HS", "AA", "BA", "MA", "PhD"),
   ordered = TRUE
 )
@@ -641,7 +627,7 @@ completed_data$degree_num <- factor(
 svy_design <- svydesign(
   ids = ~1,
   weights = ~SAMPLING_WEIGHT_CC_2017,
-  data = completed_data
+  data = imp_data
 )
 
 # Run weighted ordinal logistic regression using svyolr
@@ -654,6 +640,7 @@ svy_model <- svyolr(
   design = svy_design
 )
 
+(ci <- confint(svy_model))
 
 print("==================")
 summary(svy_model)
