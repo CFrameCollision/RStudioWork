@@ -98,7 +98,7 @@ From the available research and theory, the expected outcome of the current stud
 
 \section{Methods}
 \subsection{NLSY97 Survey Design, Sampling, and Participants}
-As previously described, the sample used was the NLSY97 conducted by the US Bureau of Labor Statistics (BLS) (2024)\nocite{noauthor_nlsy97_nodate}. This is a nationally representative sample carried out every year pre-2011 and every two years thereafter, with selection finalized in 1997 and round 1 of questions carried out in 1998. This database was chosen due to the large sample size (n = \textasciitilde8,000 respondents), robust and comprehensive question selection, representative nature, and ease of access.
+As previously described, the sample used was the NLSY97 conducted by the US Bureau of Labor Statistics (BLS) (2024)\nocite{noauthor_nlsy97_nodate}. This is a nationally representative sample carried out every year pre-2011 and every two years thereafter, with selection finalized in 1997 and round 1 of questions carried out in 1998. This database was chosen due to the large sample size (\textit{n} = \textasciitilde8,000 respondents), robust and comprehensive question selection, representative nature, and ease of access.
 
 Individuals were chosen who were born between 1980 and 1984. At the time of first interviews, respondents’ were ages 12 to 16. The sampling strategy, as described by the BLS, is as follows:
 \begin{quote}
@@ -125,14 +125,14 @@ Prior to imputation, three dummy variables were coded (figure B) for race/ethnic
 The last step taken was to fit a weighted general linear model (GLM) on an imputation using the `survey` package. The above equation was utilized in this regression. This GLM helps illustrate possible outcomes and variations within the imputations, alongside allowing weighting, which `mice` lacks support for.
 
 \subsubsection{Limitations}
-As previously noted, imputations can introduce error into analyses from inconsistent, variable data, possibly affecting results. However, given the percent of missing and density graph, there is sufficient evidence to support the quality of the imputation.
+As previously noted, imputations can introduce error into analyses from inconsistent, variable data, possibly affecting results. However, given the percent of missing and density graph, there is sufficient evidence to support the quality of the imputation. Additionally, an increased amount of runs serves to reduce variability in the observed effects of fitted models.
 
 Additionally, GED and HS are interpreted as discrete ordinal categories, with GED placed below HS. While societally they may be seen as different, practically, they hold the same functional distinction. On the other hand, a PhD and a professional degree were collapsed into a single level (level 7). See Study Limitations.
 
 \section{Results}
 \subsection{Descriptive Statistics}
 
-In total, 6701 individuals were included in the analysis from a possible 8,984. \ref{fig:OverallEffect}.
+In total, 6701 individuals were included in the analysis from a possible 8,984.
 
 \begin{table}
     \caption{Number of respondents and highest grade completed by race}
@@ -147,15 +147,6 @@ In total, 6701 individuals were included in the analysis from a possible 8,984. 
     \end{tabular}
     \label{tab:Descriptive Statistics}
 \end{table}
-
-
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.75\linewidth]{sampleFig.png} % This is setting the figure to be .75x the width of the line. This can go all the way from 0.1 to 1 (and beyond, but then you're outside the page).
-    \caption{The mean vibes for each word type and counterbalanced condition order. Error bars represent one standard error of the mean.}
-    \label{fig:OverallEffect}
-\end{figure}
 
 \subsection{Inferential Statistics}
 

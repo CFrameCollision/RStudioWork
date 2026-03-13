@@ -239,7 +239,7 @@ imp_data <- new_data_rmNA %>%
 use_predictor_matrix <- "TRUE"
 
 if (use_predictor_matrix == TRUE) {
-  # Imp w/ predictor matrix
+  # Imp w/ predictor matrix. Used in paper
   # See notes for matrix definition
   impPredictorMatrix <- rbind(
     c(rep(0, 6)), #1
@@ -258,93 +258,102 @@ if (use_predictor_matrix == TRUE) {
     seed = 1234
   )
   imp <- complete(impPred, action = "long", include = TRUE)
-} else if (use_predictor_matrix == FALSE) {
-  # Imp w/o predictor matrix. Used in paper
+} else {
+  # Imp w/o predictor matrix.
   imp <- mice(imp_data, m = 5, method = 'pmm', seed = 1234)
   imp <- complete(imp, action = "long", include = TRUE)
-} else {
-  print("No imputation being used!")
-
-  imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
-    imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017,
-    levels = 0:6,
-    labels = c("None", "GED", "HS", "AA", "BA", "MA", "PhD"),
-    ordered = TRUE
-  )
-
-  # Provides starting point to allow convergence of model 2.
-  m1 <- polr(
-    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
-      HGCParentEd *
-      DV_RACE_BLACK +
-      HGCParentEd * DV_RACE_HISPANIC +
-      HGCParentEd * DV_RACE_MIXED,
-    imp_data,
-    Hess = TRUE
-  )
-  m1.1 <- tidy(m1, conf.int = TRUE, conf.level = 0.95)
-
-  startdf <- c(m1$coefficients, m1$zeta)
-
-  m2 <- polr(
-    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
-      HGCParentEd *
-      DV_RACE_BLACK +
-      HGCParentEd * DV_RACE_HISPANIC +
-      HGCParentEd * DV_RACE_MIXED,
-    imp_data,
-    weights = SAMPLING_WEIGHT_CC_2017,
-    start = startdf,
-    Hess = TRUE
-  )
-
-  m2.1 <- tidy(m2, conf.int = TRUE, conf.level = 0.95)
-
-  expOR <- c(exp(m2.1$estimate[1:7]), rep(0, 6))
-  m2.1sum <- m2.1
-
-  m2.1sum %>% print()
-
-  termFilter <- c(
-    "HGCParentEd",
-    "DV_RACE_MIXED",
-    "DV_RACE_HISPANIC",
-    "DV_RACE_BLACK",
-    "HGCParentEd:DV_RACE_BLACK",
-    "HGCParentEd:DV_RACE_HISPANIC",
-    "HGCParentEd:DV_RACE_MIXED"
-  )
-
-  m1.1sub <- m1.1 %>%
-    filter(
-      term %in% termFilter
-    )
-
-  plot1 <- ggplot(m1.1sub, aes(x = estimate, y = reorder(term, estimate))) +
-    geom_point() +
-    geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    labs(x = "Log Odds Estimate", y = "Predictor Estimate") +
-    theme_apa()
-
-  plot1 %>% print()
-
-  m2.1sub <- m2.1 %>%
-    filter(
-      term %in% termFilter
-    )
-
-  plot2 <- ggplot(m2.1sub, aes(x = estimate, y = reorder(term, estimate))) +
-    geom_point() +
-    geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    labs(x = "Log Odds Estimate", y = "Predictor Estimate") +
-    theme_apa()
-
-  plot2 %>% print()
-
-  stop("End of sensitivity test")
 }
+
+print("No imputation being used!")
+
+imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
+  imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017,
+  levels = 0:6,
+  labels = c("None", "GED", "HS", "AA", "BA", "MA", "PhD"),
+  ordered = TRUE
+)
+
+# Provides starting point to allow convergence of model 2.
+m1 <- polr(
+  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+    HGCParentEd *
+    DV_RACE_BLACK +
+    HGCParentEd * DV_RACE_HISPANIC +
+    HGCParentEd * DV_RACE_MIXED,
+  imp_data,
+  Hess = TRUE
+)
+m1.1 <- tidy(m1, conf.int = TRUE, conf.level = 0.95)
+
+startdf <- c(m1$coefficients, m1$zeta)
+
+m2 <- polr(
+  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+    HGCParentEd *
+    DV_RACE_BLACK +
+    HGCParentEd * DV_RACE_HISPANIC +
+    HGCParentEd * DV_RACE_MIXED,
+  imp_data,
+  weights = SAMPLING_WEIGHT_CC_2017,
+  start = startdf,
+  Hess = TRUE
+)
+
+m2.1 <- tidy(m2, conf.int = TRUE, conf.level = 0.95)
+
+expOR <- c(exp(m2.1$estimate[1:7]), rep(0, 6))
+m2.1sum <- m2.1
+
+m2.1sum %>% print()
+
+termFilter <- c(
+  "HGCParentEd",
+  "DV_RACE_MIXED",
+  "DV_RACE_HISPANIC",
+  "DV_RACE_BLACK",
+  "HGCParentEd:DV_RACE_BLACK",
+  "HGCParentEd:DV_RACE_HISPANIC",
+  "HGCParentEd:DV_RACE_MIXED"
+)
+
+m1.1sub <- m1.1 %>%
+  filter(
+    term %in% termFilter
+  )
+
+plot1 <- ggplot(m1.1sub, aes(x = estimate, y = reorder(term, estimate))) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(
+    x = "Log Odds Estimate",
+    y = "Predictor Estimate",
+    title = "No weight - No imp"
+  ) +
+  theme_apa()
+
+plot1 %>% print()
+
+m2.1sub <- m2.1 %>%
+  filter(
+    term %in% termFilter
+  )
+
+plot2 <- ggplot(m2.1sub, aes(x = estimate, y = reorder(term, estimate))) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(
+    x = "Log Odds Estimate",
+    y = "Predictor Estimate",
+    title = "Weighted - No Imp"
+  ) +
+  theme_apa()
+
+plot2 %>% print()
+
+print("End of sensitivity test")
+
 
 # Factors imputations
 imp$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
@@ -411,6 +420,18 @@ ggsave(
 # Provide start to allow convergence
 polrImp <- complete(imp, action = 1L)
 
+mod2Seed <- polr(
+  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+    HGCParentEd *
+    DV_RACE_BLACK +
+    HGCParentEd * DV_RACE_HISPANIC +
+    HGCParentEd * DV_RACE_MIXED,
+  polrImp,
+  Hess = TRUE
+)
+
+startdf <- c(mod2Seed$coefficients, mod2Seed$zeta)
+
 # Runs ordinal logit on imp data
 pom_imp <- with(
   imp,
@@ -420,6 +441,8 @@ pom_imp <- with(
       DV_RACE_BLACK +
       HGCParentEd * DV_RACE_HISPANIC +
       HGCParentEd * DV_RACE_MIXED,
+    weights = SAMPLING_WEIGHT_CC_2017,
+    start = startdf,
     Hess = TRUE
   )
 )
@@ -432,6 +455,7 @@ oddRatio <- list()
 oddRatio$Term <- pom_pooled$pooled$term
 oddRatio$OR <- exp(pom_pooled$pooled$estimate)
 oddRatio$Sig <- summary(pom_pooled)$p.value
+print("OR dataframe")
 as.data.frame(oddRatio)
 
 # Converting pooled results to tidy format
@@ -471,7 +495,11 @@ ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
   geom_point() +
   geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  labs(x = "Log Odds Estimate", y = "Predictor Estimate") +
+  labs(
+    x = "Log Odds Estimate",
+    y = "Predictor Estimate",
+    title = "Weighted - Imp"
+  ) +
   theme_apa()
 
 ggsave(
@@ -594,7 +622,7 @@ if (off == FALSE) {
 
   diag_tbl
 }
-
+stop("uhuh")
 ########## Survey ##########
 
 # Selects an imp
