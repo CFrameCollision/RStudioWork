@@ -104,7 +104,7 @@ ggplot(dfs, aes(x = fitted, y = churchState)) +
   theme_pander() +
   theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt"))
 
-ggplot(dfs, aes(x = attendance, y = churchState))+
+ggplot(df, aes(x = attendance, y = churchState))+
   geom_count()+
   scale_size_area()+
   geom_smooth(method = 'lm', color = '#679df5') +
@@ -116,7 +116,7 @@ ggplot(dfs, aes(x = attendance, y = churchState))+
   theme_pander() +
   theme(plot.margin = margin(t = 15, r = 15, b = 15, l = 15, unit = "pt"))
 
-ggplot(dfs, aes(x = sex, y = churchState))+
+ggplot(df, aes(x = sex, y = churchState))+
   geom_count()+
   scale_size_area()+
   geom_smooth(method = 'lm', color = '#679df5') +

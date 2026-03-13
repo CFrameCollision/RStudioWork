@@ -262,8 +262,9 @@ if (use_predictor_matrix == TRUE) {
   # Imp w/o predictor matrix.
   imp <- mice(imp_data, m = 5, method = 'pmm', seed = 1234)
   imp <- complete(imp, action = "long", include = TRUE)
-  print("No imputation predictor matrix being used!")
 }
+
+print("No imputation being used!")
 
 imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
   imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017,

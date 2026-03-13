@@ -9,7 +9,7 @@ pract_data <- c(18, 19, 15, 20, 25, 31, 17, 35, 27, 22, 34,
 summary(pract_data)
 sd(pract_data)
 
-hist(pract_data)
+hist()
 
 # Calculates Z-scores
 z_scores <- (pract_data-mean(pract_data))/sd(pract_data)

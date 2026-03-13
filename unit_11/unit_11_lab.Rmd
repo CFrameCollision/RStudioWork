@@ -118,7 +118,7 @@ for (i in 2:4) {
   print(paste(median(df[[i]])))
 }
 
-lmresult <- lm(formula = pf ~ inc + age + regat, df)
+lmresult <- lm(formula = pf ~ inc + age + regpr, df)
 ```
 
 After running a summary to find the exact results of the `lm()`, a
@@ -168,9 +168,9 @@ for (i in 1:length(lmresult$coefficients)) {
 
 Full results can be found in figure 2 within section 6. Figure 2 shows that
 each individual independent variable is statistically significant in relation
-to how they affect the dependent. Furthermore, regular attendance and age display
+to how they affect the dependent. Furthermore, regular prayer and age display
 positive relationships, while income displays a negative relationship. Regular
-attendance is the largest predictor and the most statistically significant, at
+prayer is the largest predictor and the most statistically significant, at
 a p-value of \(2E-16\).
 
 Medians for the 3 dependent variables are as follows:

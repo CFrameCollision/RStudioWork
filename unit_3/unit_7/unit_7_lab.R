@@ -33,11 +33,11 @@ greaterthan68_17 <- subset(data_2017, data_2017 > 68)
 
 # Stat sig for 21-
 test2 <- t.test(lessthan22_07, lessthan22_17,
-                alternative = c("less"), conf.level = 0.95)
+                alternative = c("less"), conf.levels = 0.95)
 
 # Stat sig for 69+
 test3 <- t.test(greaterthan68_07, greaterthan68_17,
-                alternative = c("greater"), conf.level = 0.95)
+                alternative = c("greater"), conf.levels = 0.95)
 
 format_ttest <- function(test) {
   sprintf("t = %.2f, df = %.2f, p-value = %.4f, 95%% CI = (%.2f, %.2f)",
