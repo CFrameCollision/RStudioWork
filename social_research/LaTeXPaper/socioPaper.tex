@@ -33,17 +33,17 @@
 \usepackage[T1]{fontenc} 
 \usepackage{mathptmx} % This is the Times New Roman font, which was the norm back in my day. If you'd like to use a different font, the options are laid out here: https://www.overleaf.com/learn/latex/Font_typefaces
 % Alternately, you can comment out or delete these two commands and just use the Overleaf default font. So many choices!
-
+\usepackage{enumitem}
 
 % Title page stuff _____________________
 \title{The Interplay of Race/Ethnicity and Parental Education in Educational Attainment: A Cohort Analysis} % The big, long version of the title for the title page
 \shorttitle{The Interplay of Race/Ethnicity \& Parental Education} % The short title for the header
 \author{Christopher Byrd}
-\date{February 13, 2026}
+\date{March 16, 2026}
 % \date{January 17, 2024} The student version doesn't use the \date command, for whatever reason
 \authorsaffiliations{Whitworth University}
 
-\abstract{Educational attainment is a key predictor of life outcomes. Despite this, access to opportunity within the American education system remains inequitable. This study examines how the intersectionality of race/ethnicity and parental education shape educational attainment among U.S. adults born between 1980 and 1984, using data from the National Longitudinal Survey of Youth 1997 (NLSY97). Prior research has highlighted racial disparities in school funding, disciplinary outcomes, and postsecondary access, as well as the effects of parental education on individual success. However, the interaction between the aforementioned variables remains under-explored in cohort-based analyses. This study applied multiple imputation and proportional odds ordinal logistic regression to model how educational attainment of residential parents, combined with race, influenced respondents’ highest educational outcome completed by ages 33–37. Results indicate that while increased parental education is positively correlated with respondent educational attainment overall, the strength of this relationship varies significantly by race/ethnicity-parental interactions. Notably, Hispanic respondents demonstrated higher baseline odds of attainment but received smaller marginal benefits from increased parental education.}
+\abstract{Educational attainment is a key predictor of life outcomes. Despite this, access to opportunity within the American education system remains inequitable. This study examines how the intersectionality of race/ethnicity and parental education shape educational attainment among U.S. adults born between 1980 and 1984, using data from the National Longitudinal Survey of Youth 1997 (NLSY97). Prior research has highlighted racial disparities in school funding, disciplinary outcomes, and postsecondary access, as well as the effects of parental education on individual success. However, the interaction between the aforementioned variables remains under-explored in cohort-based analyses. This study applied multiple imputation and proportional odds ordinal logistic regression to model how educational attainment of residential parents, combined with race, influenced respondents’ highest educational outcome completed by ages 33-37. Results indicate that while increased parental education is positively correlated with respondent educational attainment overall, the strength of this relationship varies significantly by race/ethnicity-parental interactions. Notably, Hispanic respondents demonstrated higher baseline odds of attainment but received smaller marginal benefits from increased parental education.}
 
 \keywords{Educational Attainment, Structural Inequality, Race, Parental Education} % If you need to have keywords for your paper, delete the % at the start of this line
 
@@ -53,28 +53,26 @@
 
 \section{Introduction}
 
-School serves as one of the most important institutions within an individual’s life, affecting development and socialization \parencite[p.551-555]{conley_you_2019}. Throughout this experience, students of color are subjected to ethnic-racial discrimination. According to the UN Human Rights Office of the High Commissioner (OHCHR) (1965), ethnic-racial discrimination refers to negative behaviors experienced by individuals who identify as people of color. The effects of this discrimination are varied in reach and impact, from educational outcomes to adjustment within a school environment \parencite{bottiani_multilevel_2017, del_toro_when_2024, pearman_collective_2022}.
+School serves as one of the most important institutions within an individual’s life, affecting development and socialization \parencite[p.551-555]{conley_you_2019}. Throughout this experience, students of color are subjected to ethnic-racial discrimination. According to the UN Human Rights Office of the High Commissioner (OHCHR) (1965), ethnic-racial discrimination refers to negative behaviors experienced by individuals who identify as people of color. While often conceptualized as individual behavior, these experiences are rooted in systemic structures that disproportionally allocate social capital and resources. The effects of this discrimination are varied in reach and impact, from educational outcomes to adjustment within a school environment \parencite{bottiani_multilevel_2017, del_toro_when_2024, pearman_collective_2022}.
 
-Additionally, research into discrimination by Kimberlé Williams Crenshaw
-
-Of particular interest to this paper is how societal forces and structures effect differing educational outcomes, particularly with regard to parental educational achievement and ethnic-racial discrimination. Specifically, this analysis looks to answer the following question: among U.S. adults born from 1980 to 1984, how does the intersection of race/ethnicity and parental education affect the highest educational milestone completed by ages 33-37? This question is of particular interest as educational inequality is rampant in the United States and can affect all facets of life, from wealth to health \parencite{zajacova_relationship_2018, lurie_mechanisms_2021}. To answer this question, data from the National Longitudinal Survey of Youth 1997 (NLSY97) was analyzed utilizing proportional odds logistic equations.
+Additionally, parental educational attainment has been shown to impact their children's ability to succeed within an educational setting \parencite{assari_parental_2018,oakes_multiplying_1990,reed_educational_nodate}. This is made worse by the intersection of race \parencite{assari_parental_2018}. As such, it's important to consider how societal forces and structures affect differing educational outcomes, particularly with regard to parental educational achievement and ethnic-racial discrimination. Specifically, this analysis looks to answer the following question: among U.S. adults born from 1980 to 1984, how does the intersection of race/ethnicity and parental education affect the highest educational milestone completed by ages 33-37? This question is of particular interest as educational inequality is rampant in the United States and can affect all facets of life, from wealth to health \parencite{zajacova_relationship_2018, lurie_mechanisms_2021}. To answer this question, data from the National Longitudinal Survey of Youth 1997 (NLSY97), a comprehensive and nationally representative longitudinal survey, was analyzed utilizing proportional odds, semi-proportional odds, and generalized ordered logistic equation.
 
 \section{The Literature}
 \subsection{Availability of Resources}
 The degree to which students and educators have access to resources significantly impacts student outcomes. \textcite{condron_disparities_2003} found a positive correlation between school spending and test scores, with schools serving predominantly minority and low-income populations consistently underfunded. Looking to the \textcite{national_center_for_education_statistics_concentration_2023}, over 30\% of Hispanic, Black, and Native students attend low-income schools, compared to only 7\% of White students. This stark disparity is often attributed to broader patterns of social stratification within U.S. society, with concrete examples within California’s education system (\parencite{reed_educational_nodate, kozol_savage_1991}).
 
-\textcite{oakes_multiplying_1990} argued that these inequities arise because inner-city schools lack the political influence needed to secure adequate funding. As a result, schools with predominantly minority student populations often face severe resource deficits in science, limiting access to experienced teachers, adequate facilities, and technology necessary for academic success. It’s notable that this article was preempted by a need for human capital—more workers in science and technology—and only partially driven by the intent to discover racial inequities.
+\textcite{oakes_multiplying_1990} argued that these inequities arise because inner-city schools lack the political influence needed to secure adequate funding. As a result, schools with predominantly minority student populations often face severe resource deficits in science, limiting access to experienced teachers, adequate facilities, and technology necessary for academic success. It’s notable that this article was prompted by a need for human capital—more workers in science and technology—and only partially driven by the intent to discover racial inequities.
 
 \subsection{Belonging Within Schools}
-\textcite{bottiani_multilevel_2017} completed a study that showed that gaps between White and Black students within out-of-school suspension (OSS) had a significant negative correlation on sense of belonging within a Black student's school. Alongside this was a positive correlation in adjustment problems with higher Black suspension rates. A higher low-SES population within a school also contributed to these findings, highlighting the importance of resources in student success. \textcite{king_examination_2011} found the opposite: school discipline had no effect on belonging and outcomes based upon race. This study is limited in effect, however, as it only examines whether there was discipline. There was no analysis of gaps based upon race.
+\textcite{bottiani_multilevel_2017} completed a study that showed that gaps between White and Black students within out-of-school suspension (OSS) had a significant negative correlation on sense of belonging within a Black student's school. Alongside this was a positive correlation in adjustment problems with higher Black suspension rates. A higher low-SES population within a school also contributed to these findings, highlighting the importance of resources in student success. \textcite{king_examination_2011} found the opposite: school discipline had no effect on belonging and outcomes based upon race. This study is limited in effect, however, as it only examines whether there was discipline. There was no analysis of whether significant gaps existed based upon race.
 
 \textcite{georgiades_emotional_2013} provided an interesting set of results in their study on belonging in school, emotional issues, and adjustment issues related to racial congruence and immigration generational status. For Asian and White students, an increase in congruence resulted in a negative correlation on behavioral problems, while the opposite was true for Black students (all groups being 3rd-generation immigrants). For emotional problems, we see a negative correlation for White and Black students when congruence increases, but a positive correlation for Asian students. The overall effects of congruence are very mixed. However, they are attenuated significantly by a sense of belonging, as this contributes directly to emotional and behavioral adjustment. That is to say, a sense of not belonging explains emotional and behavioral issues at a statistically significant level when a positive correlation is observed, rather than congruence.
 
-Both studies contain parallels to critical race theory (CRT) and strain theory \parencite{bottiani_multilevel_2017, georgiades_emotional_2013, delgado_critical_2020}. Looking upon CRT, systemic inequalities, whether it be unequal representation in the student body, school punishment, or economic resources, increase racially divided outcomes in school performance, perpetuating negative stereotypes and increasing inequalities outside of schooling environments. Within strain theory, the pressures of belonging and increased punishment create strain upon students psyches, resulting in the findings of \textcite{georgiades_emotional_2013}.
+Both studies contain parallels to critical race theory (CRT) and strain theory \parencite{bottiani_multilevel_2017, georgiades_emotional_2013, delgado_critical_2020}. Looking upon CRT, systemic inequalities, whether it be unequal representation in the student body, school punishment, or economic resources, increase racially divided outcomes in school performance, perpetuating negative stereotypes and increasing inequalities outside of schooling environments. Within strain theory, the pressures of belonging and increased punishment create strain upon students psyches and performance, resulting in the findings of \textcite{georgiades_emotional_2013}. Additionally, taking into account the social capital of parental education, lower parental attainment serves to increase the negative effects of both strain and critical race theory.
 
 \subsection{School Achievement}
 \subsubsection{Testing in Primary and Secondary Settings}
-The Black-White score gap is a numerical manifestation of systemic inequities within education and society. \textcite{pearman_collective_2022} found that Black students are performing upwards of 0.5 standard deviations (SD) worse than their White peers, with this increasing modestly (0.1-0.2 SDs) with a SD of 1 or more with regard to county-level implicit and explicit bias. \textcite{del_toro_when_2024} found similarly that racist encounters with an educator, specifically in math, lead to lower test scores in both victimized students and students aware of the aggression. Students experiencing vicarious discrimination were subject to even lower scores than students directly affected, though the converse is true for class grades.
+The Black-White score gap is a numerical manifestation of systemic inequities within education and society. \textcite{pearman_collective_2022} found that Black students are performing upwards of 0.5 standard deviations (SD) lower than their White peers, with this increasing modestly (0.1-0.2 SDs) with a SD of 1 or more with regard to county-level implicit and explicit bias. \textcite{del_toro_when_2024} found similarly that racist encounters with an educator, specifically in math, lead to lower test scores in both victimized students and students aware of the aggression. Students experiencing vicarious discrimination were subject to even lower scores than students directly affected, though the converse is true for class grades.
 
 The score gap is also directly related to resources, where every additional \$1,000 in funding per student accounts for a subject-dependent increase of 6\%-10\% on state-administered standardized tests \parencite{condron_disparities_2003, reed_educational_nodate}. \textcite{reed_educational_nodate} found that clearance rates for the 10th grade exit test in California were appreciably lower in every race except Asians when compared to White students. Furthermore, over half of all Hispanic students were in low-performing schools, where there were 7\% fewer properly credentialed educators on staff.
 
@@ -84,17 +82,20 @@ The score gap is also directly related to resources, where every additional \$1,
 Moving back towards \textcite{reed_educational_nodate}, she finds that attenuating factors include general SES level, though SES is predicated often upon academic achievement. The general trend shows a vicious cycle of lower educational outcomes begetting lower educational outcomes. \textcite{assari_parental_2018} undertook a very similar study to the current one, finding that between Black and non-Hispanic White individuals, educational attainment was greater for White individuals, but educational mobility was higher for Black individuals. Furthermore, Assari included covariates for gender, finding these effects only occurred for female respondents.
 
 \subsection{Theoretical Framework}
-\subsubsection{Racial/Ethnic Generational Achievement}
-A preeminent theory that attempts to explain segmentation in immigrant class outcomes and mobility is segmented assimilation theory, proposed by \textcite{portes_new_1993}. In their paper, Portes and Zhou examined second-generation immigrant households, arguing that not all immigrant groups follow the same upward trajectory of class mobility. Instead, assimilation pathways are shaped by numerous structural factors, such as race and community support structures. This often leads to outcomes that diverge in effects, from downward class mobility to assimilation of cultural ideas. This theory provides a valuable framework from which to observe the impact and effects of generational achievement. In particular, it helps explain how generational achievement may impact educational attainment differently depending on the social and institutional context in which families are embedded.
+\subsubsection{Racial/Ethnic Generational Achievement \& Inequalities}
 
-\subsubsection{Compounding Inequalities}
+Through the late 1980s and early 1990s, Kimberlé Crenshaw (\citedate{crenshawMappingMarginsIntersectionality1991,crenshawDemarginalizingIntersectionRace1989}) developed a framework for analyzing the intersecting and additive effects of inequalities called Intersectionality. Intersectionality posits that simply examining inequalities an individual or group experiences is inadequate; rather, looking at how they work in tandem better explains the experiences and outcomes observed.
 
-
-\subsection{Parental Education}
-How to quantify parental education is a matter of intense debate within the social sciences. A number of methods exist, ranging from averaging to taking the maximum value.
+Additionally, a preeminent theory that attempts to explain segmentation in immigrant class outcomes and mobility is segmented assimilation theory, proposed by \textcite{portes_new_1993}. In their paper, Portes and Zhou examined second-generation immigrant households, arguing that not all immigrant groups follow the same upward trajectory of class mobility. Instead, assimilation pathways are shaped by numerous structural factors, such as race and community support structures. This often leads to outcomes that diverge in effects, from downward class mobility to assimilation of cultural ideas. These theories combined provide a valuable framework from which to observe the impact and effects of generational achievement. In particular, they help to explain how generational achievement may impact educational attainment differently depending on the social and institutional context in which families and individuals are embedded.
 
 \subsection{Hypothesis}
-From the available research and theory, the expected outcome of the current study is that higher levels of parental education and being White will lead to increased educational outcomes, while the converse is true for lower parental education and individuals who are of a race/ethnicity other than White.
+From the available research and theory, the expected outcomes of the current study are as follows:
+
+\begin{enumerate}[label=H\textsubscript{\arabic*}:]
+     \item Higher levels of parental education and identifying as White will independently correlate with higher educational milestones completed by ages 33--37.
+     \item The positive association between parental educational attainment and a respondent's own educational outcome will be significantly stronger for White individuals than for individuals of color.
+     \item Specifically, it is hypothesized that at higher levels of parental education, the attainment gap between White respondents and Black or Hispanic respondents will persist or widen, suggesting that systemic racial discrimination attenuates the social capital typically provided by high parental education.
+\end{enumerate}
 
 \section{Methods}
 \subsection{NLSY97 Survey Design, Sampling, and Participants}
@@ -102,12 +103,14 @@ As previously described, the sample used was the NLSY97 conducted by the US Bure
 
 Individuals were chosen who were born between 1980 and 1984. At the time of first interviews, respondents’ were ages 12 to 16. The sampling strategy, as described by the BLS, is as follows:
 \begin{quote}
-    “The NLSY97 cohort was selected in two phases... In the first phase, a list of housing units for the cross-sectional sample and the over-sample was derived from two independently selected, stratified multistage area probability samples. This ensured an accurate representation of different sections of the population defined by race, income, region, and other factors. In the second phase, sub-samples of the eligible persons identified in the first phase were selected for interview.”
+     “The NLSY97 cohort was selected in two phases... In the first phase, a list of housing units for the cross-sectional sample and the over-sample was derived from two independently selected, stratified multistage area probability samples. This ensured an accurate representation of different sections of the population defined by race, income, region, and other factors. In the second phase, sub-samples of the eligible persons identified in the first phase were selected for interview.”
 \end{quote}
-The cross-sectional sample was used for all data analysis. Further information about the NLSY97 is available on the NLS website (2024).
+The longitudinal sample was used for all data analysis. Further information about the NLSY97 is available on the NLS website (2024).
 
 \subsubsection{Education}
-Within the NLSY97 (2024), the data was subset to specify participants in round 18 who responded with an answer to the following question: “[What is] the highest degree received as of the survey date?” This was on a scale of 0 to 7, with zero representing no high school completion and 7 representing a professional degree. All responses falling outside this range (non-interviews and invalid skips for respondents, ungraded for parents) were removed. This accounted for n = 2283, with most being non-cross-sectional respondents. Important to note is the difference in scales between parental and respondent education levels (see appendix A, fig. A \& B for the complete codebook).
+Within the NLSY97 (2024), the data was subset to specify participants in round 18 who responded with an answer to the following question: “[What is] the highest degree received as of the survey date?” This was on a scale of 0 to 7, with zero representing no high school completion and 7 representing a professional degree. All responses falling outside this range (non-interviews and invalid skips for respondents, ungraded for parents) were removed. This accounted for n = 2283, with most being non-longitudinal respondents. Important to note is the difference in scales between parental and respondent education levels (see appendix A, fig. A \& B for the complete codebook).
+
+Looking further into respondents HGC, there were two pairs of responses that posed a unique question with how to code: High School Diploma-GED and PhD-Professional degree (PD). Each pair provides similar results; a High School Diploma (HSD) and a GED both convey completion of grades K-12, whilst a PhD and PD are both terminal degrees. However, a HS Diploma and GED affect an individual's life course in differing ways, largely due to social stigma and age differences in attainment when compared to a diploma \parencite{maralaniGEDCollegeAge2011}. As such, HSD-GED were kept separated. On the contrary, the trajectory of PhD and PD are similar and were thus collapsed into a single response value.
 
 For parental education, multiple approaches were considered. An analysis with parental education kept separate (additive effects) was tested but yielded results with high collinearity, suppression effects, and extremely high Variance Inflation Factor (VIF). For this reason, parental education was coded as the maximum between each residential pair. Where a residential parent was missing, education was coded as the education of the present parent. Residential was chosen over biological, as the present study is concerned about the social power of education, not possible biological factors.
 
@@ -115,12 +118,12 @@ For parental education, multiple approaches were considered. An analysis with pa
 The NLSY97 offers a number of variables encoding race and/or ethnicity. For this analysis, the race/ethnicity key variable from round 1 was utilized. Round 4 contains seven dummy variables encoding race for the cross-sectional sample; however, this increases the number of covariates sizeably and is interviewer-identified, whereas round 1 is self-identified. By forgoing the data from round 4, overfitting and implicit interviewer bias are avoided.
 
 \subsection{Data Analysis}
-A unique aspect of the data that made analysis more complex was the number of answers missing from the residential parent’s educational attainment variable (round 1) (see appendix for codebook). Residential parent (separated into mother and father - coded as "mom" and "dad") was chosen, as this study is attempting to discover how parents living in the same household affect their children's future education. Figure 4 presents the missing data using an upset plot. After combining mother and father HGC to a single variable, missingness was reduced to 9\%; however, imputation has been shown to produce better analyses than casewise deletion, especially when the data is MCAR or missing at random (MAR) \parencite{afghari_contrasting_2019}. Thus, the decision to continue using imputations was made. To determine whether the pattern was random, Jamshidian and Jalal's (2010)\nocite{jamshidian_tests_2010} non-parametric missing completely at random (MCAR) test was used. Following this, data was imputed using the MICE package, which utilizes Gibbs sampling. The imputation method chosen was predictive mean matching (PMM), as PMM provides plausible data that is robust given multiple data types \parencite{buuren_flexible_2021}.
+A unique aspect of the data that made analysis more complex was the number of answers missing from the residential parent’s educational attainment variable (round 1) (see appendix for codebook). Residential parent (separated into mother and father - coded as "mom" and "dad") was chosen, as this study is attempting to discover how parents living in the same household affect their children's future education. Figure 4 presents the missing data using an upset plot. An original analysis was completed with seperated parent HGC values, which required imputation due to a casewise missingness of. After combining mother and father HGC to a single variable, missingness was reduced to 9\%; however, imputation has been shown to produce better analyses than casewise deletion, especially when the data is MCAR or missing at random (MAR) \parencite{afghari_contrasting_2019}. Thus, the decision to continue using imputations was made. To determine whether the pattern was random, Jamshidian and Jalal's (2010)\nocite{jamshidian_tests_2010} non-parametric missing completely at random (MCAR) test was used. Following this, data was imputed using the MICE package, which utilizes Gibbs sampling. The imputation method chosen was predictive mean matching (PMM), as PMM provides plausible data that is robust given multiple data types \parencite{buuren_flexible_2021}.
 
-Prior to imputation, three dummy variables were coded (figure B) for race/ethnicity, with non-Black/non-Hispanic as the reference variable. Once the imputation was completed, a proportional ordinal logistic regression was run on each imputation (a total of 5 imputations were created) and pooled together to create table 2 and figures 6 and 7. Due to convergence issues, an initial model was ran without weights to provide a starting point for the weighted model. ggplot2 was used to construct all plots within the document due to its wealth of documentation, plethora of packages expanding on its functionality, and its flexibility. The following regression equation was used:
+Prior to imputation, three dummy variables were coded (figure B) for race/ethnicity, with non-Black/non-Hispanic as the reference variable. Once the imputation was completed, a number of models were tested. These were a number of differently-specified proportional odds logit models, a generalized ordinal logit model, a svyolr model (under proportional odds assumption), and a OLS via the \textit{svy} package. Ultimately, a proportional ordinal logistic regression was chosen, ran on each imputation (a total of 5 imputations were created), and pooled together to create table 2 and figures 6 and 7. Due to convergence issues, an initial model was ran without weights to provide a starting point for the weighted model. ggplot2 was used to construct all plots within the document due to its wealth of documentation, plethora of packages expanding on its functionality, and its flexibility. The following regression equation was used:
 \begin{multline}
-    Highest Degree = HGCParent * Black+ \\
-    HGCParent*Hispanic + HGCParent*Mixed
+     Highest Degree = HGCParent * Black+ \\
+     HGCParent*Hispanic + HGCParent*Mixed
 \end{multline}
 The last step taken was to fit a weighted general linear model (GLM) on an imputation using the `survey` package. The above equation was utilized in this regression. This GLM helps illustrate possible outcomes and variations within the imputations, alongside allowing weighting, which `mice` lacks support for.
 
@@ -129,23 +132,57 @@ As previously noted, imputations can introduce error into analyses from inconsis
 
 Additionally, GED and HS are interpreted as discrete ordinal categories, with GED placed below HS. While societally they may be seen as different, practically, they hold the same functional distinction. On the other hand, a PhD and a professional degree were collapsed into a single level (level 7). See Study Limitations.
 
+Lastly, the sample size for individuals of mixed race is excessively small (\textit{n}=64) after selecting valid cases and prior to casewise deletion or imputation of invalid/missing parent HGC answers. This high standard error and low prediction power. Future studies should aim to encapsulate a greater number of respondents within this demographic, as it is underexplored.
+
 \section{Results}
 \subsection{Descriptive Statistics}
 
-In total, 6701 individuals were included in the analysis from a possible 8,984.
+In total, 6701 individuals were included in the analysis from a possible 8,984. Table \ref{tab:Descriptive Statistics} provides a breakdown, by race, of educational attainment of all respondents.
 
 \begin{table}
-    \caption{Number of respondents and highest grade completed by race}
-    \centering
-    \begin{tabular}{cccc}
-        \hline
-        Race  & \textit{n} & Mean & SD \\
-        \hline
-        Black & 2          & 3    & 5  \\
-              & 2          & 3    & 5  \\
-        White & 3          & 4    & 6  \\
-    \end{tabular}
-    \label{tab:Descriptive Statistics}
+     \caption{Number of respondents and highest grade completed by race. *See}
+     \centering
+     \begin{tabular}{ccccc}
+          \hline
+          HGC  & Race     & \textit{n} & Mean  & SD    \\
+          \hline
+          None & NBNH     & 174        & 3     & 5     \\
+               & Black    & 174        &       &       \\
+               & Hispanic & 162        &       &       \\
+               & Mixed    & 2          &       &       \\
+          \hline
+          AA   & NBNH     & 343        & 3     & 5     \\
+               & Black    & 328        &       &       \\
+               & Hispanic & 179        &       &       \\
+               & Mixed    & 11         &       &       \\
+          \hline
+          HS   & NBNH     & 1218       & 3     & 5     \\
+               & Black    & 796        &       &       \\
+               & Hispanic & 654        &       &       \\
+               & Mixed    & 21         &       &       \\
+          \hline
+          AA   & NBNH     & 325        & 3     & 5     \\
+               & Black    & 144        &       &       \\
+               & Hispanic & 121        &       &       \\
+               & Mixed    & 8          &       &       \\
+          \hline
+          BA   & NBNH     & 870        & 3     & 5     \\
+               & Black    & 256        &       &       \\
+               & Hispanic & 210        &       &       \\
+               & Mixed    & 16         &       &       \\
+          \hline
+          MA   & NBNH     & 375        & 3     & 5     \\
+               & Black    & 99         &       &       \\
+               & Hispanic & 62         &       &       \\
+               & Mixed    & 4          &       &       \\
+          \hline
+          PhD* & NBNH     & 103        & 37.25 & 45.31 \\
+               & Black    & 30         &       &       \\
+               & Hispanic & 14         &       &       \\
+               & Mixed    & 2          &       &       \\
+          \hline
+     \end{tabular}
+     \label{tab:Descriptive Statistics}
 \end{table}
 
 \subsection{Inferential Statistics}
@@ -155,6 +192,15 @@ Analytical words.
 \section{Discussion}
 
 Discussion words.
+
+\section{Limitations}
+As previously noted, imputations can introduce error into analyses from inconsistent, variable data, possibly affecting results. However, given the percent of missing and density graph, there is sufficient evidence to support the quality of the imputation. Additionally, an increased amount of runs serves to reduce variability in the observed effects of fitted models.
+
+Additionally, GED and HS are interpreted as discrete ordinal categories, with GED placed below HS. While societally they may be seen as different, practically, they hold the same functional distinction. On the other hand, a PhD and a professional degree were collapsed into a single level (level 7). See \textit{methods}.
+
+Lastly, the sample size for individuals of mixed race is excessively small (\textit{n}=64) after selecting valid cases and prior to casewise deletion or imputation of invalid/missing parent HGC answers. This high standard error and low prediction power. Future studies should aim to encapsulate a greater number of respondents within this demographic, as it is underexplored.
+
+\section{Conclusion}
 
 
 \printbibliography

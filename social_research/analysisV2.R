@@ -38,6 +38,8 @@ library(effects)
 library(visdat)
 library(stargazer)
 library(Hmisc)
+library(VGAM)
+library(svyVGAM)
 
 if (
   Sys.info()['sysname'] == "Linux" && basename(getwd()) != "social_research"
@@ -227,12 +229,21 @@ new_data_rmNA <- new_data_rmNA %>%
 
 imp_data <- new_data_rmNA %>%
   dplyr::select(
+    KEY_SEX_1997,
     CV_HIGHEST_DEGREE_EVER_EDT_2017,
     DV_RACE_MIXED,
     DV_RACE_HISPANIC,
     DV_RACE_BLACK,
     HGCParentEd,
+    VSTRAT_1997,
+    VPSU_1997,
     SAMPLING_WEIGHT_CC_2017
+  ) %>%
+  mutate(
+    CV_HIGHEST_DEGREE_EVER_EDT_2017 = case_when(
+      CV_HIGHEST_DEGREE_EVER_EDT_2017 == 7 ~ 6,
+      .default = as.integer(CV_HIGHEST_DEGREE_EVER_EDT_2017)
+    )
   )
 
 # Turn off/on predictor matrix imputation. Put in a random string to test polr w/out imp
@@ -242,12 +253,15 @@ if (use_predictor_matrix == TRUE) {
   # Imp w/ predictor matrix. Used in paper
   # See notes for matrix definition
   impPredictorMatrix <- rbind(
-    c(rep(0, 6)), #1
-    c(rep(0, 6)), #2
-    c(rep(0, 6)), #3
-    c(rep(0, 6)), #4
-    c(1, 1, 1, 1, 0, 1), #5 - Predictors for ParentEd
-    c(rep(0, 6)) #7
+    c(rep(0, 9)), #1
+    c(rep(0, 9)), #2
+    c(rep(0, 9)), #3
+    c(rep(0, 9)), #4
+    c(rep(0, 9)), #5
+    c(1, 1, 1, 1, 1, 1, 0, 0, 0), #6 - Predictors for ParentEd
+    c(rep(0, 9)), #7
+    c(rep(0, 9)), #8
+    c(rep(0, 9)) #9
   )
 
   impPred <- mice(
@@ -273,6 +287,18 @@ imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
   ordered = TRUE
 )
 
+imp_dataNoMixed <- imp_data %>%
+  dplyr::filter(
+    DV_RACE_MIXED == 0,
+    !is.na(HGCParentEd),
+    is.finite(HGCParentEd)
+  ) %>%
+  select(-DV_RACE_MIXED) %>%
+  mutate(
+    SAMPLING_WEIGHT_CC_2017 = SAMPLING_WEIGHT_CC_2017 /
+      mean(SAMPLING_WEIGHT_CC_2017, na.rm = TRUE)
+  )
+
 # Provides starting point to allow convergence of model 2.
 m1 <- polr(
   CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
@@ -295,17 +321,45 @@ m2 <- polr(
     HGCParentEd * DV_RACE_MIXED,
   imp_data,
   weights = SAMPLING_WEIGHT_CC_2017,
-  Hess = TRUE,
-  maxit = 10000
+  start = startdf,
+  Hess = TRUE
 )
 startdf2 <- c(m2$coefficients, m2$zeta)
 
 m2.1 <- tidy(m2, conf.int = TRUE, conf.level = 0.95)
 
 expOR <- c(exp(m2.1$estimate[1:7]), rep(0, 6))
-m2.1sum <- m2.1
+m2.1sum <- cbind(m2.1, expOR)
 
 m2.1sum %>% print()
+
+m3_unw <- polr(
+  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+    HGCParentEd * DV_RACE_BLACK + HGCParentEd * DV_RACE_HISPANIC,
+  data = imp_dataNoMixed,
+  Hess = TRUE,
+  method = "logistic",
+  na.action = na.omit
+)
+
+m3_start <- c(m3_unw$coefficients, m3_unw$zeta)
+
+m3 <- polr(
+  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+    HGCParentEd *
+    DV_RACE_BLACK +
+    HGCParentEd * DV_RACE_HISPANIC,
+  imp_dataNoMixed,
+  start = m3_start,
+  weights = SAMPLING_WEIGHT_CC_2017,
+  Hess = TRUE
+)
+m3.1 <- tidy(m3, conf.int = TRUE, conf.level = 0.95)
+
+expOR <- c(exp(m3.1$estimate[1:5]), rep(0, 6))
+m3.1sum <- cbind(m3.1, expOR)
+
+m3.1sum %>% print()
 
 termFilter <- c(
   "HGCParentEd",
@@ -416,6 +470,109 @@ ggsave(
   units = "in"
 )
 
+########## Attempt Generalized OLR ##########
+golrMod <- with(
+  imp,
+  vglm(
+    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+      HGCParentEd *
+      DV_RACE_BLACK +
+      HGCParentEd * DV_RACE_HISPANIC +
+      HGCParentEd * DV_RACE_MIXED,
+    family = cumulative(
+      link = "logitlink",
+      parallel = FALSE ~ DV_RACE_MIXED + DV_RACE_BLACK
+    ),
+    weights = SAMPLING_WEIGHT_CC_2017
+  )
+)
+
+rrVGAM <- function(model, returnFull = FALSE) {
+  # Applies Rubin's Rules to items of mira and vglm class. Used for VGAM with imputations.
+
+  if (
+    !inherits(model, "mira") ||
+      !inherits(model$analyses[[1]], c("vglm", "svy_vglm"))
+  ) {
+    stop("Model is either not a mira or vglm object, or both")
+  }
+
+  coef_tbl <- purrr::map_dfr(
+    model$analyses,
+    \(fit) {
+      tibble::tibble(
+        term = names(coef(fit)),
+        q = unname(coef(fit)),
+        u = diag(vcov(fit))
+      )
+    },
+    .id = "imp"
+  )
+
+  pooled <- coef_tbl %>%
+    dplyr::summarise(
+      m = dplyr::n(),
+      qbar = mean(q),
+      ubar = mean(u),
+      b = var(q),
+      t = ubar + (1 + 1 / m) * b,
+      r = ((1 + 1 / m) * b) / ubar,
+      df = (m - 1) * (1 + 1 / r)^2,
+      std.error = sqrt(t),
+      statistic = qbar / std.error,
+      p.value = 2 * stats::pt(abs(statistic), df = df, lower.tail = FALSE),
+      conf.low = qbar - stats::qt(0.975, df = df) * std.error,
+      conf.high = qbar + stats::qt(0.975, df = df) * std.error,
+      .by = term
+    ) %>%
+    dplyr::mutate(
+      odds_ratio = exp(qbar),
+      conf.low.or = exp(conf.low),
+      conf.high.or = exp(conf.high)
+    )
+
+  if (returnFull) {
+    return(pooled)
+  }
+
+  pooledReadable <- pooled %>%
+    select(-m, -qbar, -ubar, -b, -t, -std.error) %>%
+    filter(!grepl(pattern = "^\\(Intercept\\):", term))
+  return(pooledReadable)
+}
+
+pooled <- rrVGAM(golrMod)
+
+# pooled %>% write.csv(file = "pooledPartialPOLR.csv")
+
+pooled
+
+########## svyVGAM ##########
+
+svygolr <- with(imp, {
+  des <- svydesign(
+    ids = ~VSTRAT_1997,
+    strata = ~VPSU_1997,
+    weights = ~SAMPLING_WEIGHT_CC_2017,
+    nest = TRUE
+  )
+
+  svy_vglm(
+    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+      HGCParentEd *
+      DV_RACE_BLACK +
+      HGCParentEd * DV_RACE_HISPANIC +
+      HGCParentEd * DV_RACE_MIXED,
+    design = des,
+    family = cumulative(
+      link = "logitlink",
+      parallel = FALSE ~ DV_RACE_MIXED + DV_RACE_BLACK
+    )
+  )
+})
+
+svygolr %>% rrVGAM()
+
 ########## POLR ##########
 
 # Runs ordinal logit on imp data
@@ -433,6 +590,7 @@ pom_imp <- with(
   )
 )
 
+
 # !!!!!Remember data is logarithmic!!!!!
 pom_pooled <- pool(pom_imp)
 summary(pom_pooled)
@@ -441,6 +599,7 @@ oddRatio <- list()
 oddRatio$Term <- pom_pooled$pooled$term
 oddRatio$OR <- exp(pom_pooled$pooled$estimate)
 oddRatio$Sig <- summary(pom_pooled)$p.value
+
 print("OR dataframe")
 as.data.frame(oddRatio)
 
@@ -576,20 +735,20 @@ ggsave(
   units = "in"
 )
 
-off <- TRUE
+off <- FALSE
 
 if (off == FALSE) {
   #### Some POLR Diagnostics for parallel slopes assumption ####
 
   sf <- function(y) {
     c(
+      'Y>=0' = qlogis(mean(y >= 0)),
       'Y>=1' = qlogis(mean(y >= 1)),
       'Y>=2' = qlogis(mean(y >= 2)),
       'Y>=3' = qlogis(mean(y >= 3)),
       'Y>=4' = qlogis(mean(y >= 4)),
       'Y>=5' = qlogis(mean(y >= 5)),
-      'Y>=6' = qlogis(mean(y >= 6)),
-      'Y>=7' = qlogis(mean(y >= 7))
+      'Y>=6' = qlogis(mean(y >= 6))
     )
   }
 
@@ -597,23 +756,19 @@ if (off == FALSE) {
   completed_imp <- complete(imp, 1)
 
   # Use aggregate + custom function to get the same style of cutpoint logits
-  diag_tbl <- completed_imp |>
-    dplyr::mutate(y_num = as.numeric(CV_HIGHEST_DEGREE_EVER_EDT_2017)) |>
+  diag_tbl <- completed_imp %>%
+    dplyr::mutate(y_num = as.numeric(CV_HIGHEST_DEGREE_EVER_EDT_2017)) %>%
     dplyr::summarise(
       N = dplyr::n(),
       across(y_num, ~ list(sf(.x))),
       .by = c(HGCParentEd, DV_RACE_BLACK, DV_RACE_HISPANIC, DV_RACE_MIXED)
-    ) |>
+    ) %>%
     tidyr::unnest_wider(y_num)
 
   diag_tbl
 }
 stop("uhuh")
 ########## Survey ##########
-
-# Selects an imp
-completed_data <- complete(imp, action = 1L)
-
 
 # Fixed after turning in, see svyglm.txt for code used in paper
 # Weighted OLR
@@ -625,9 +780,11 @@ imp_data$degree_num <- factor(
 
 # Define survey design with weights
 svy_design <- svydesign(
-  ids = ~1,
+  ids = ~VSTRAT_1997,
+  strata = ~VPSU_1997,
   weights = ~SAMPLING_WEIGHT_CC_2017,
-  data = imp_data
+  data = imp_data,
+  nest = TRUE
 )
 
 # Run weighted ordinal logistic regression using svyolr

@@ -275,6 +275,69 @@ Min:              1        Max:              4        Mean:                2.79
 Lead In: R05387.00[Default]
 Default Next Question: R05389.00
 --------------------------------------------------------------------------------
+R14897.00    [VSTRAT]                                       Survey Year: 1997
+  PRIMARY VARIABLE
+
+             VARIANCE STRATUM
+ 
+Variable for use with variance PSU to correct for clustering in the sample 
+design.
+ 
+The stratum reflects the first-stage units for the initial sampling of NLSY97 
+respondents. This variable should be used in conjunction with VPSU.
+ 
+       0           0
+     935           1 TO 9
+    1178          10 TO 19
+    1143          20 TO 29
+    1056          30 TO 39
+    1161          40 TO 49
+     622          50 TO 59
+     826          60 TO 69
+     378          70 TO 79
+     423          80 TO 89
+     508          90 TO 99
+     390         100 TO 109
+     364         110 TO 119
+       0         120 TO 99999999: 120+
+  -------
+    8984
+ 
+Refusal(-1)            0
+Don't Know(-2)         0
+TOTAL =========>    8984   VALID SKIP(-4)       0     NON-INTERVIEW(-5)       0
+ 
+Min:              1        Max:            117        Mean:               46.56
+ 
+Lead In: R13183.00[Default]
+Default Next Question: R14898.00
+--------------------------------------------------------------------------------
+R14898.00    [VPSU]                                         Survey Year: 1997
+  PRIMARY VARIABLE
+
+             VARIANCE PSU
+ 
+Variable for use with variance stratum to correct for clustering in the sample 
+design.
+ 
+The VPSU reflects the second-stage units for the initial sampling of NLSY97 
+respondents. There are two second-stage units (VPSU) for each first-stage unit 
+(VSTRAT). This variable should be used in conjunction with VSTRAT.
+ 
+    4585           1
+    4399           2
+  -------
+    8984
+ 
+Refusal(-1)            0
+Don't Know(-2)         0
+TOTAL =========>    8984   VALID SKIP(-4)       0     NON-INTERVIEW(-5)       0
+ 
+Min:              1        Max:              2        Mean:                1.49
+ 
+Lead In: R14897.00[Default]
+Default Next Question: R12506.00
+--------------------------------------------------------------------------------
 U18460.00    [CV_HIGHEST_DEGREE_EVER_EDT]                   Survey Year: 2017
   PRIMARY VARIABLE
 
@@ -282,9 +345,9 @@ U18460.00    [CV_HIGHEST_DEGREE_EVER_EDT]                   Survey Year: 2017
  
 The highest degree received as of the survey date.
  
-     514       0 None
+     513       0 None
      862       1 GED
-    2692       2 High school diploma (Regular 12 year program)
+    2693       2 High school diploma (Regular 12 year program)
      598       3 Associate/Junior college (AA)
     1352       4 Bachelor's degree (BA, BS)
      540       5 Master's degree (MA, MS)
