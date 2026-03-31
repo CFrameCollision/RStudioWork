@@ -18,6 +18,8 @@
 
 # For my POLR model, I've mixed up * and :. x1*x2 is equivalent to x1 + x2 + x1:x2.
 
+# High VIF is likely caused by underspecification. Try every permutation of control variables you can,
+
 library(MASS)
 library(tidyverse)
 # library(ggthemes)
@@ -40,6 +42,8 @@ library(stargazer)
 library(Hmisc)
 library(VGAM)
 library(svyVGAM)
+
+options(scipen = 999)
 
 if (
   Sys.info()['sysname'] == "Linux" && basename(getwd()) != "social_research"
@@ -122,15 +126,9 @@ new_data_rmNA <- new_data_rmNA %>%
 
 #title = "Highest Degree Attained of Respondents (Overall)"
 ggplot(new_data_rmNA, aes(x = degree_label, fill = race)) +
-  geom_bar() +
+  geom_bar(fill = "#2b2b2b") +
   labs(x = "Degree") +
   facet_wrap(~race, scales = "free_y") +
-  stat_count(
-    geom = 'text',
-    color = 'black',
-    aes(label = after_stat(count)),
-    position = position_stack(vjust = 1.05)
-  ) +
   guides(fill = FALSE) +
   theme_apa() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -148,18 +146,39 @@ ggsave(
 
 #title = "Highest Degree Attained (Mother)"
 ggplot(new_data_rmNA, aes(x = CV_HGC_RES_MOM_1997)) +
-  geom_bar(fill = "lightblue") +
-  labs(x = "Degree") +
+  geom_bar(fill = "#2b2b2b") +
+  labs(x = "Education Level") +
   facet_wrap(~race, scales = "free_y") +
   theme_apa()
+
+ggsave(
+  filename = "histogram2.png",
+  plot = last_plot(),
+  scale = 1,
+  device = "png",
+  dpi = "retina",
+  width = 6.5,
+  height = 5.5,
+  units = "in"
+)
 
 #title = "Highest Degree Attained (Father)"
 ggplot(new_data_rmNA, aes(x = CV_HGC_RES_DAD_1997)) +
-  geom_bar(fill = "lightpink") +
-  labs(x = "Degree") +
+  geom_bar(fill = "#2b2b2b") +
+  labs(x = "Education Level") +
   facet_wrap(~race, scales = "free_y") +
   theme_apa()
 
+ggsave(
+  filename = "histogram3.png",
+  plot = last_plot(),
+  scale = 1,
+  device = "png",
+  dpi = "retina",
+  width = 6.5,
+  height = 5.5,
+  units = "in"
+)
 
 ##########  Start of missing data analysis ##########
 # Looking at missing-ness by race/ethnicity
@@ -244,7 +263,8 @@ imp_data <- new_data_rmNA %>%
       CV_HIGHEST_DEGREE_EVER_EDT_2017 == 7 ~ 6,
       .default = as.integer(CV_HIGHEST_DEGREE_EVER_EDT_2017)
     )
-  )
+  ) %>%
+  select(-KEY_RACE_ETHNICITY_1997)
 
 # Turn off/on predictor matrix imputation. Put in a random string to test polr w/out imp
 use_predictor_matrix <- TRUE
@@ -266,7 +286,7 @@ if (use_predictor_matrix == TRUE) {
 
   impPred <- mice(
     imp_data,
-    m = 5,
+    m = 20,
     method = 'pmm',
     predictorMatrix = impPredictorMatrix,
     seed = 1234
@@ -274,7 +294,7 @@ if (use_predictor_matrix == TRUE) {
   imp <- complete(impPred, action = "long", include = TRUE)
 } else {
   # Imp w/o predictor matrix.
-  imp <- mice(imp_data, m = 5, method = 'pmm', seed = 1234)
+  imp <- mice(imp_data, m = 20, method = 'pmm', seed = 1234)
   imp <- complete(imp, action = "long", include = TRUE)
 }
 
@@ -435,7 +455,7 @@ long_imp <- long_imp %>%
   ungroup()
 
 # Facilitates faceting
-long_flaged <- long_imp %>%
+long_flagged <- long_imp %>%
   dplyr::select(
     .imp,
     HGCParentEd,
@@ -443,17 +463,33 @@ long_flaged <- long_imp %>%
   )
 
 p <- ggplot(
-  long_flaged,
-  aes(x = HGCParentEd, fill = parentMissing, color = parentMissing)
+  long_flagged,
+  aes(
+    x = HGCParentEd,
+    fill = parentMissing,
+    color = parentMissing,
+    linetype = parentMissing
+  )
 ) +
-  geom_density(alpha = 0.3) +
-  scale_fill_manual(values = c("TRUE" = "blue", "FALSE" = "red")) +
-  scale_color_manual(values = c("TRUE" = "blue", "FALSE" = "red")) +
+  geom_density(alpha = 0.3, size = 0.8) +
+  scale_fill_manual(
+    labels = c("Casewise Deletion", "Imputed"),
+    values = c("TRUE" = "#1e1e1e", "FALSE" = "lightgray")
+  ) +
+  scale_color_manual(
+    labels = c("Casewise Deletion", "Imputed"),
+    values = c("TRUE" = "#2c2c2c", "FALSE" = "black")
+  ) +
+  scale_linetype_manual(
+    labels = c("Casewise Deletion", "Imputed"),
+    values = c("TRUE" = "twodash", "FALSE" = "solid")
+  ) +
   labs(
     x = "Highest Grade Completed",
     y = "Density",
     fill = "Data Type",
-    color = "Data Type"
+    color = "Data Type",
+    linetype = "Data Type"
   ) +
   theme_apa()
 
@@ -566,7 +602,7 @@ svygolr <- with(imp, {
     design = des,
     family = cumulative(
       link = "logitlink",
-      parallel = FALSE ~ DV_RACE_MIXED + DV_RACE_BLACK
+      parallel = FALSE ~ DV_RACE_MIXED + DV_RACE_BLACK + DV_RACE_HISPANIC
     )
   )
 })
@@ -597,11 +633,18 @@ summary(pom_pooled)
 
 oddRatio <- list()
 oddRatio$Term <- pom_pooled$pooled$term
+oddRatio$Estimate <- pom_pooled$pooled$estimate
 oddRatio$OR <- exp(pom_pooled$pooled$estimate)
+oddRatio$TValue <- pom_pooled$pooled$t
 oddRatio$Sig <- summary(pom_pooled)$p.value
 
 print("OR dataframe")
 as.data.frame(oddRatio)
+
+oddRatioPooledSum <- as.data.frame(summary(pom_pooled))
+oddRatioPooledSum <- oddRatioPooledSum[, -6]
+oddRatioPooledSum <- oddRatioPooledSum[-c(8:13), ]
+
 
 # Converting pooled results to tidy format
 pooled_summary <- summary(pom_pooled)
@@ -742,13 +785,13 @@ if (off == FALSE) {
 
   sf <- function(y) {
     c(
-      'Y>=0' = qlogis(mean(y >= 0)),
       'Y>=1' = qlogis(mean(y >= 1)),
       'Y>=2' = qlogis(mean(y >= 2)),
       'Y>=3' = qlogis(mean(y >= 3)),
       'Y>=4' = qlogis(mean(y >= 4)),
       'Y>=5' = qlogis(mean(y >= 5)),
-      'Y>=6' = qlogis(mean(y >= 6))
+      'Y>=6' = qlogis(mean(y >= 6)),
+      'Y>=7' = qlogis(mean(y >= 7))
     )
   }
 
@@ -767,7 +810,8 @@ if (off == FALSE) {
 
   diag_tbl
 }
-stop("uhuh")
+
+
 ########## Survey ##########
 
 # Fixed after turning in, see svyglm.txt for code used in paper
@@ -778,27 +822,53 @@ imp_data$degree_num <- factor(
   ordered = TRUE
 )
 
-# Define survey design with weights
-svy_design <- svydesign(
-  ids = ~VSTRAT_1997,
-  strata = ~VPSU_1997,
-  weights = ~SAMPLING_WEIGHT_CC_2017,
-  data = imp_data,
-  nest = TRUE
+svy_model <- with(imp, {
+  svy_design <- svydesign(
+    ids = ~VSTRAT_1997,
+    strata = ~VPSU_1997,
+    weights = ~SAMPLING_WEIGHT_CC_2017,
+    nest = TRUE
+  )
+
+  # Run weighted ordinal logistic regression using svyolr
+  svyolr(
+    CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+      HGCParentEd *
+      DV_RACE_BLACK +
+      HGCParentEd * DV_RACE_HISPANIC +
+      HGCParentEd * DV_RACE_MIXED,
+    design = svy_design
+  )
+})
+
+svypooled <- pool(svy_model)
+
+paperModel <- summary(
+  svypooled,
+  conf.int = TRUE,
+  conf.level = 0.95
 )
 
-# Run weighted ordinal logistic regression using svyolr
-svy_model <- svyolr(
-  CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
-    HGCParentEd *
-    DV_RACE_BLACK +
-    HGCParentEd * DV_RACE_HISPANIC +
-    HGCParentEd * DV_RACE_MIXED,
-  design = svy_design
-)
+print("Important!!!! ==================")
+paperModel <- paperModel %>% as.data.frame()
+paperModel <- paperModel %>%
+  mutate(OR = exp(estimate)) %>%
+  select(term, estimate, OR, std.error, statistic, conf.low, conf.high)
+paperModel %>% stargazer(summary = FALSE)
+print("Important !!!! ==================")
 
-(ci <- confint(svy_model))
+stop("Done!")
 
-print("==================")
-summary(svy_model)
-print("==================")
+# don't use this stuff \/ \/ \/
+
+svy_model_sum <- summary(svy_model)$coefficient %>% as.data.frame()
+svy_model_sum <- cbind(svy_model_sum, ci)
+svy_model_sum <- svy_model_sum[-c(8:13), ]
+svy_model_sum <- svy_model_sum %>%
+  mutate(
+    OR = exp(Value)
+  ) %>%
+  select(Value, OR, everything())
+svy_model_sum %>% stargazer(summary = FALSE)
+
+# don't use this stuff /\ /\ /\

@@ -1,18 +1,24 @@
 
 
 Reference
-Number     Year  Variable Description                                      Question Name               
----------------------------------------------------------------------------------------------------------
-R00001.00  1997  PUBID, YOUTH CASE IDENTIFICATION CODE                     PUBID                       
-R05363.00  1997  KEY!SEX, RS SEX (SYMBOL)                                  KEY!SEX                     
-R05364.01  1997  KEY!BDATE, RS BIRTHDATE MONTH/YEAR (SYMBOL)               KEY!BDATE_M                 
-R05364.02  1997  KEY!BDATE, RS BIRTHDATE MONTH/YEAR (SYMBOL)               KEY!BDATE_Y                 
-R12358.00  1997  SAMPLE TYPE.  CROSS-SECTIONAL OR OVERSAMPLE               CV_SAMPLE_TYPE              
-R12361.01  1997  ROUND 1 SAMPLING WEIGHT CUMULATIVE CASES METHOD           SAMPLING_WEIGHT_CC          
-R13026.00  1997  RESIDENTIAL FATHERS HIGHEST GRADE COMPLETED               CV_HGC_RES_DAD              
-R13027.00  1997  RESIDENTIAL MOTHERS HIGHEST GRADE COMPLETED               CV_HGC_RES_MOM              
-R14826.00  1997  KEY!RACE_ETHNICITY, COMBINED RACE AND ETHNICITY (SYMBOL)  KEY!RACE_ETHNICITY          
-R14897.00  1997  VARIANCE STRATUM                                          VSTRAT                      
-R14898.00  1997  VARIANCE PSU                                              VPSU                        
-U18460.00  2017  HIGHEST DEGREE RECEIVED                                   CV_HIGHEST_DEGREE_EVER_EDT  
-U18554.00  2017  ROUND 18 SAMPLING WEIGHT CUMULATIVE CASES METHOD          SAMPLING_WEIGHT_CC          
+Number     Year  Variable Description                                                 Question Name               
+--------------------------------------------------------------------------------------------------------------------
+R00001.00  1997  PUBID, YOUTH CASE IDENTIFICATION CODE                                PUBID                       
+R05363.00  1997  KEY!SEX, RS SEX (SYMBOL)                                             KEY!SEX                     
+R05364.01  1997  KEY!BDATE, RS BIRTHDATE MONTH/YEAR (SYMBOL)                          KEY!BDATE_M                 
+R05364.02  1997  KEY!BDATE, RS BIRTHDATE MONTH/YEAR (SYMBOL)                          KEY!BDATE_Y                 
+R06179.00  1997  PR OWN, RENT HOUSE/APARTMENT?                                        P5-101                      
+R06815.00  1997  R HAVE LEARNING/EMOTIONAL PROBLEM LIMITING SCHOOL/WORK PERFORMANCE?  PC9-004                     
+R12003.00  1997  CENSUS REGION OF RESIDENCE                                           CV_CENSUS_REGION            
+R12045.00  1997  GROSS HH INCOME IN PAST YEAR                                         CV_INCOME_GROSS_YR          
+R12049.00  1997  RATIO OF HOUSEHOLD INCOME TO POVERTY LEVEL                           CV_HH_POV_RATIO             
+R12053.00  1997  RS RELATIONSHIP TO HOUSEHOLD PARENT FIGURE                           CV_YTH_REL_HH_CURRENT       
+R12358.00  1997  SAMPLE TYPE.  CROSS-SECTIONAL OR OVERSAMPLE                          CV_SAMPLE_TYPE              
+R12361.01  1997  ROUND 1 SAMPLING WEIGHT CUMULATIVE CASES METHOD                      SAMPLING_WEIGHT_CC          
+R13026.00  1997  RESIDENTIAL FATHERS HIGHEST GRADE COMPLETED                          CV_HGC_RES_DAD              
+R13027.00  1997  RESIDENTIAL MOTHERS HIGHEST GRADE COMPLETED                          CV_HGC_RES_MOM              
+R14826.00  1997  KEY!RACE_ETHNICITY, COMBINED RACE AND ETHNICITY (SYMBOL)             KEY!RACE_ETHNICITY          
+R14897.00  1997  VARIANCE STRATUM                                                     VSTRAT                      
+R14898.00  1997  VARIANCE PSU                                                         VPSU                        
+U18460.00  2017  HIGHEST DEGREE RECEIVED                                              CV_HIGHEST_DEGREE_EVER_EDT  
+U18554.00  2017  ROUND 18 SAMPLING WEIGHT CUMULATIVE CASES METHOD                     SAMPLING_WEIGHT_CC          

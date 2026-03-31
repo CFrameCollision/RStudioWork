@@ -27,6 +27,7 @@ library(Hmisc)
 library(VGAM)
 library(svyVGAM)
 
+options(scipen = 999)
 
 if (
     Sys.info()['sysname'] == "Linux" && basename(getwd()) != "social_research"
@@ -123,6 +124,22 @@ new_data_rmNA <- new_data_rmNA %>%
         )
     )
 
+### Some descriptives
+
+if (TRUE) {
+    df <- table(new_data_rmNA[c("race", "degree_label")]) %>% as.data.frame()
+    meanFreq <- df %>%
+        group_by(degree_label) %>%
+        mutate(Mean = mean(Freq), SD = sd(Freq)) %>%
+        ungroup() %>%
+        mutate(Race = as.character(race), HGC = as.character(degree_label))
+    starMeanFreq <- meanFreq %>%
+        select(-degree_label, -race) %>%
+        select(HGC, Race, everything()) %>%
+        mutate(SD = round(SD, 2))
+    stargazer::stargazer(starMeanFreq, summary = FALSE)
+}
+
 ##########  Imputations ##########
 
 imp_data <- new_data_rmNA %>%
@@ -158,26 +175,210 @@ impPredictorMatrix <- rbind(
 
 imp <- mice(
     imp_data,
-    m = 5,
+    m = 20,
     method = 'pmm',
     predictorMatrix = impPredictorMatrix,
     seed = 1234
 )
 
-imp <- complete(imp, action = "long", include = TRUE)
+imp_long <- complete(imp, action = "long", include = TRUE)
 
-imp$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
-    imp$CV_HIGHEST_DEGREE_EVER_EDT_2017,
+imp_long$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
+    imp_long$CV_HIGHEST_DEGREE_EVER_EDT_2017,
     levels = 0:6,
     labels = c("None", "GED", "HS", "AA", "BA", "MA", "PhD"),
     ordered = TRUE
 )
 
-imp <- as.mids(imp)
+imp <- as.mids(imp_long)
+
+######### Diagnostic Func ##########
+# Purpose-built; not useable in other code yet.
+
+run_svyolr_diagnostics_mi <- function(imp, sex_code = 1) {
+    imp_list <- complete(imp, action = "all")
+
+    per_imp <- purrr::imap_dfr(imp_list, \(dat, .imp_id) {
+        dat <- dat %>%
+            as_tibble() %>%
+            mutate(
+                CV_HIGHEST_DEGREE_EVER_EDT_2017 = if (
+                    is.factor(CV_HIGHEST_DEGREE_EVER_EDT_2017)
+                ) {
+                    CV_HIGHEST_DEGREE_EVER_EDT_2017
+                } else {
+                    factor(
+                        CV_HIGHEST_DEGREE_EVER_EDT_2017,
+                        levels = 0:6,
+                        labels = c(
+                            "None",
+                            "GED",
+                            "HS",
+                            "AA",
+                            "BA",
+                            "MA",
+                            "PhD"
+                        ),
+                        ordered = TRUE
+                    )
+                },
+                race = case_when(
+                    DV_RACE_BLACK == 1 ~ "Black",
+                    DV_RACE_HISPANIC == 1 ~ "Hispanic",
+                    DV_RACE_MIXED == 1 ~ "Mixed Race",
+                    TRUE ~ "Non-Black/Non-Hispanic"
+                ) %>%
+                    factor(
+                        levels = c(
+                            "Black",
+                            "Hispanic",
+                            "Mixed Race",
+                            "Non-Black/Non-Hispanic"
+                        )
+                    )
+            )
+
+        ds <- svydesign(
+            ids = ~VPSU_1997,
+            strata = ~VSTRAT_1997,
+            nest = TRUE,
+            weights = ~SAMPLING_WEIGHT_CC_2017,
+            data = dat
+        )
+
+        ds_sub <- subset(ds, KEY_SEX_1997 == sex_code)
+        dat_sub <- dat %>% filter(KEY_SEX_1997 == sex_code)
+
+        sparse_tab <- svytable(~ CV_HIGHEST_DEGREE_EVER_EDT_2017 + race, ds_sub)
+        sparse_vals <- as.numeric(sparse_tab)
+
+        fit_po <- tryCatch(
+            svyolr(
+                CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+                    HGCParentEd *
+                    DV_RACE_BLACK +
+                    HGCParentEd * DV_RACE_HISPANIC +
+                    HGCParentEd * DV_RACE_MIXED,
+                design = ds_sub
+            ),
+            error = \(e) NULL
+        )
+
+        if (is.null(fit_po)) {
+            return(
+                tibble(
+                    imp = as.integer(.imp_id),
+                    min_weighted_cell = min(sparse_vals),
+                    n_zero_cells = sum(sparse_vals == 0),
+                    cutpoints_strictly_increasing = NA,
+                    extreme_prob_rate_95 = NA_real_,
+                    extreme_prob_rate_99 = NA_real_,
+                    po_lrt_p = NA_real_,
+                    condition_number = NA_real_,
+                    fit_failed = TRUE
+                )
+            )
+        }
+
+        pred_probs <- predict(fit_po, type = "probs")
+
+        fit_par <- tryCatch(
+            svy_vglm(
+                CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+                    HGCParentEd *
+                    DV_RACE_BLACK +
+                    HGCParentEd * DV_RACE_HISPANIC +
+                    HGCParentEd * DV_RACE_MIXED,
+                design = ds_sub,
+                family = VGAM::cumulative(link = "logit", parallel = TRUE)
+            ),
+            error = \(e) NULL
+        )
+
+        fit_nonpar <- tryCatch(
+            svy_vglm(
+                CV_HIGHEST_DEGREE_EVER_EDT_2017 ~
+                    HGCParentEd *
+                    DV_RACE_BLACK +
+                    HGCParentEd * DV_RACE_HISPANIC +
+                    HGCParentEd * DV_RACE_MIXED,
+                design = ds_sub,
+                family = VGAM::cumulative(link = "logit", parallel = FALSE)
+            ),
+            error = \(e) NULL
+        )
+
+        po_lrt_p <- NA_real_
+        if (!is.null(fit_par) && !is.null(fit_nonpar)) {
+            cmp <- tryCatch(
+                anova(fit_par, fit_nonpar, test = "Chisq"),
+                error = \(e) NULL
+            )
+            if (!is.null(cmp)) {
+                cmp_df <- as.data.frame(cmp)
+                p_col <- grep("Pr\\(>.*\\)", names(cmp_df), value = TRUE)
+                if (length(p_col) > 0) {
+                    po_lrt_p <- suppressWarnings(as.numeric(cmp_df[[p_col[
+                        1
+                    ]]][nrow(cmp_df)]))
+                }
+            }
+        }
+
+        x <- model.matrix(
+            ~ HGCParentEd *
+                DV_RACE_BLACK +
+                HGCParentEd * DV_RACE_HISPANIC +
+                HGCParentEd * DV_RACE_MIXED,
+            data = dat_sub
+        )
+
+        tibble(
+            imp = as.integer(.imp_id),
+            min_weighted_cell = min(sparse_vals),
+            n_zero_cells = sum(sparse_vals == 0),
+            cutpoints_strictly_increasing = all(diff(fit_po$zeta) > 0),
+            extreme_prob_rate_95 = mean(apply(pred_probs, 1, max) > 0.95),
+            extreme_prob_rate_99 = mean(apply(pred_probs, 1, max) > 0.99),
+            po_lrt_p = po_lrt_p,
+            condition_number = kappa(x, exact = TRUE),
+            fit_failed = FALSE
+        )
+    })
+
+    aggregate <- per_imp %>%
+        dplyr::summarize(
+            n_imputations = n(),
+            n_failed = sum(fit_failed),
+            min_weighted_cell_mean = mean(min_weighted_cell, na.rm = TRUE),
+            n_zero_cells_mean = mean(n_zero_cells, na.rm = TRUE),
+            cutpoints_all_ordered = all(
+                cutpoints_strictly_increasing,
+                na.rm = TRUE
+            ),
+            extreme_prob_rate_95_mean = mean(
+                extreme_prob_rate_95,
+                na.rm = TRUE
+            ),
+            extreme_prob_rate_99_mean = mean(
+                extreme_prob_rate_99,
+                na.rm = TRUE
+            ),
+            po_lrt_p_median = median(po_lrt_p, na.rm = TRUE),
+            condition_number_mean = mean(condition_number, na.rm = TRUE)
+        )
+
+    list(
+        per_imp = per_imp,
+        aggregate = aggregate
+    )
+}
 
 ########## svyolr ##########
 options(survey.lonely.psu = "adjust")
 ##### Female model - KEY_SEX = 2 #####
+
+run_svyolr_diagnostics_mi(imp, sex_code = 2)
 
 mf <- with(imp, {
     dat <- tibble(
@@ -278,3 +479,187 @@ combDF <- combDF %>%
     rename(Term = TermMale)
 
 combDF
+
+###### Let's see if a binary OLS has any results... ######
+
+long_imp <- complete(imp, action = "long", include = TRUE)
+
+binaryCut <- 1
+binaryArg <- switch(
+    binaryCut,
+    `1` = c("BA", "MA", "PhD"), # Most significant model.
+    `2` = c("MA", "PhD"),
+    `3` = c("PhD"),
+    `4` = c("HS", "BA", "MA", "PhD"),
+    `5` = c("GED", "HS", "BA", "MA", "PhD")
+)
+
+binaryImp <- long_imp %>%
+    mutate(
+        binaryHGC = if_else(
+            CV_HIGHEST_DEGREE_EVER_EDT_2017 %in% binaryArg,
+            1,
+            0
+        )
+    ) %>%
+    as.mids()
+
+mod1 <- with(
+    binaryImp,
+    lm(
+        binaryHGC ~ HGCParentEd *
+            DV_RACE_BLACK +
+            HGCParentEd * DV_RACE_HISPANIC +
+            HGCParentEd * DV_RACE_MIXED
+    )
+)
+
+pmod1 <- pool(mod1)
+summary(pmod1)
+
+# Create training & testing data
+set.seed(1)
+
+#Use 70% of dataset as training set and remaining 30% as testing set
+n_obs <- nrow(binaryImp$data)
+train_idx <- sample.int(n_obs, size = floor(0.7 * n_obs), replace = FALSE)
+
+### TODO: find and use test statistic for model significance of quasibinomial svy model.
+t <- with(binaryImp, {
+    d <- tibble(
+        binaryHGC,
+        HGCParentEd,
+        DV_RACE_MIXED,
+        DV_RACE_HISPANIC,
+        DV_RACE_BLACK,
+        VSTRAT_1997,
+        VPSU_1997,
+        SAMPLING_WEIGHT_CC_2017
+    )
+
+    train <- d[train_idx, , drop = FALSE]
+
+    des <- svydesign(
+        ids = ~VPSU_1997,
+        strata = ~VSTRAT_1997,
+        nest = TRUE,
+        weights = ~SAMPLING_WEIGHT_CC_2017,
+        data = train
+    )
+
+    sm <- svyglm(
+        binaryHGC ~ HGCParentEd *
+            DV_RACE_BLACK +
+            HGCParentEd * DV_RACE_HISPANIC +
+            HGCParentEd * DV_RACE_MIXED,
+        design = des,
+        family = quasibinomial(link = "logit")
+    )
+    sm
+})
+
+tp <- pool(t)
+paperModel <- summary(tp, conf.int = TRUE)
+
+print("IMPORTANT===========================================")
+paperModel <- paperModel %>% as.data.frame()
+paperModel <- paperModel %>%
+    mutate(OR = exp(estimate)) %>%
+    select(term, estimate, OR, std.error, statistic, conf.low, conf.high)
+paperModel %>% stargazer(summary = FALSE)
+print("IMPORTANT===========================================")
+
+
+######## Sensitivity Check #########
+
+imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017 <- factor(
+    imp_data$CV_HIGHEST_DEGREE_EVER_EDT_2017,
+    levels = 0:6,
+    labels = c("None", "GED", "HS", "AA", "BA", "MA", "PhD"),
+    ordered = TRUE
+)
+
+binaryDat <- imp_data %>%
+    mutate(
+        binaryHGC = if_else(
+            CV_HIGHEST_DEGREE_EVER_EDT_2017 %in% binaryArg,
+            1,
+            0
+        )
+    )
+
+
+svdesign <- svydesign(
+    ids = ~VPSU_1997,
+    strata = ~VSTRAT_1997,
+    nest = TRUE,
+    weights = ~SAMPLING_WEIGHT_CC_2017,
+    data = binaryDat
+)
+
+sm <- svyglm(
+    binaryHGC ~ HGCParentEd *
+        DV_RACE_BLACK,
+    design = svdesign,
+    family = quasibinomial(link = "logit")
+)
+
+summary(sm)
+vif(sm)
+
+#####################################
+
+predmod <- with(binaryImp, {
+    d <- tibble(
+        binaryHGC,
+        HGCParentEd,
+        DV_RACE_MIXED,
+        DV_RACE_HISPANIC,
+        DV_RACE_BLACK,
+        VSTRAT_1997,
+        VPSU_1997,
+        SAMPLING_WEIGHT_CC_2017
+    )
+
+    train <- d[train_idx, , drop = FALSE]
+
+    des <- svydesign(
+        ids = ~VPSU_1997,
+        strata = ~VSTRAT_1997,
+        nest = TRUE,
+        weights = ~SAMPLING_WEIGHT_CC_2017,
+        data = train
+    )
+
+    test <- d[-train_idx, , drop = FALSE]
+
+    sm <- svyglm(
+        binaryHGC ~ HGCParentEd *
+            DV_RACE_BLACK +
+            HGCParentEd * DV_RACE_HISPANIC +
+            HGCParentEd * DV_RACE_MIXED,
+        design = des,
+        family = quasibinomial(link = "logit")
+    )
+    pr <- predict(sm, test, type = "link", se.fit = TRUE)
+})
+
+pred_list <- predmod$analyses %>% purrr::map(\(x) as.data.frame(x))
+
+n_pred <- nrow(pred_list[[1]])
+
+pooled_pred <- purrr::map_dfr(seq_len(n_pred), \(i) {
+    q_i <- purrr::map_dbl(pred_list, \(x) x$link[i])
+    u_i <- purrr::map_dbl(pred_list, \(x) x$SE[i]^2)
+
+    rubin <- mice::pool.scalar(Q = q_i, U = u_i, n = Inf, k = 1)
+
+    tibble::tibble(
+        row_id = i,
+        eta = rubin$qbar,
+        eta_se = sqrt(rubin$t),
+        p = plogis(rubin$qbar)
+    )
+})
+
+pooled_pred

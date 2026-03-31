@@ -103,6 +103,204 @@ Latest   (NonMissing): DECEMBER/1984
 Lead In: R05364.01[Default]
 Default Next Question: R05366.00
 --------------------------------------------------------------------------------
+R06179.00    [P5-101]                                       Survey Year: 1997
+  PRIMARY VARIABLE
+
+             PR OWN, RENT HOUSE/APARTMENT?
+ 
+Do [you/you or your spouse/partner] own this (house/apartment), or do you rent 
+or what?
+ 
+UNIVERSE: R lives in house/apartment
+ 
+    4575       1 OWNS OR IS BUYING; LAND CONTRACT   (Go To R06181.00)
+    2605       2 PAYS RENT   (Go To R06192.00)
+     188       3 NEITHER OWNS NOR RENTS
+  -------
+    7368
+ 
+Refusal(-1)           20   (Go To R06192.00)
+Don't Know(-2)         1   (Go To R06192.00)
+TOTAL =========>    7389   VALID SKIP(-4)    1595     NON-INTERVIEW(-5)       0
+ 
+Min:              1        Max:              3        Mean:                 1.4
+ 
+Lead In: R06167.00[Default]
+Default Next Question: R06180.00
+--------------------------------------------------------------------------------
+R06815.00    [PC9-004]                                      Survey Year: 1997
+  PRIMARY VARIABLE
+
+             R HAVE LEARNING/EMOTIONAL PROBLEM LIMITING SCHOOL/WORK PERFORMANCE?
+ 
+Does [this youth] now have or has [he/she] ever had a learning or emotional 
+problem that limits or has limited the kind of schoolwork or other daily 
+activities [he/she] can perform, the amount of time [he/she] can spend on these 
+activities or [his/her] performance in these activities?
+ 
+     822       1 Yes
+    7058       0 No
+  -------
+    7880
+ 
+Refusal(-1)            3
+Don't Know(-2)         9
+TOTAL =========>    7892   VALID SKIP(-4)    1092     NON-INTERVIEW(-5)       0
+ 
+Min:              0        Max:              1        Mean:                  .1
+ 
+Lead In: R06814.00[Default]
+Default Next Question: R06816.00
+--------------------------------------------------------------------------------
+R12003.00    [CV_CENSUS_REGION]                             Survey Year: 1997
+  PRIMARY VARIABLE
+
+             CENSUS REGION OF RESIDENCE
+ 
+Census region of the residence as of the survey date.
+ 
+    1585       1 Northeast (CT, ME, MA, NH, NJ, NY, PA, RI, VT)
+    2050       2 North Central (IL, IN, IA, KS, MI, MN, MO, NE, OH, ND, SD, WI)
+    3359       3 South (AL, AR, DE, DC, FL, GA, KY, LA, MD, MS, NC, OK, SC, TN ,
+                      TX, VA, WV)
+    1990       4 West (AK, AZ, CA, CO, HI, ID, MT, NV, NM, OR, UT, WA, WY)
+  -------
+    8984
+ 
+Refusal(-1)            0
+Don't Know(-2)         0
+TOTAL =========>    8984   VALID SKIP(-4)       0     NON-INTERVIEW(-5)       0
+ 
+Min:              1        Max:              4        Mean:                2.64
+ 
+Lead In: R12002.00[Default]
+Default Next Question: R12004.00
+--------------------------------------------------------------------------------
+R12045.00    [CV_INCOME_GROSS_YR]                           Survey Year: 1997
+  PRIMARY VARIABLE
+
+             GROSS HH INCOME IN PAST YEAR
+ 
+Gross household income in the previous year.
+ 
+NOTE: /*Topcoded at the 2% level.  Truncated values are applied to the top 2 
+percent of respondents with valid non-missing responses.  The average value of 
+the top 2 percent of cases is used as the value.  Negative values of -1, -2, -3,
+-4, or -5 do not reflect negative monetary amounts; these numbers represent 
+standard NLSY97 codes.*/
+ 
+       3     -999999 TO -3000: < -2999
+       0       -2999 TO -2000
+       0       -1999 TO -1000
+       0        -999 TO -1
+     100           0
+      71           1 TO 1000
+      41        1001 TO 2000
+      98        2001 TO 3000
+     139        3001 TO 5000
+     465        5001 TO 10000
+     925       10001 TO 20000
+     819       20001 TO 30000
+     835       30001 TO 40000
+     765       40001 TO 50000
+     834       50001 TO 65000
+     610       65001 TO 80000
+     397       80001 TO 100000
+     321      100001 TO 150000
+      32      150001 TO 200000
+     133      200001 TO 999999: 200001+
+  -------
+    6588
+ 
+Refusal(-1)            0
+Don't Know(-2)         0
+Invalid Skip(-3)    1458
+TOTAL =========>    8046   VALID SKIP(-4)     938     NON-INTERVIEW(-5)       0
+ 
+Min:         -48100        Max:         246474        Mean:             46361.7
+ 
+Lead In: R13027.00[Default]
+Default Next Question: R12046.00
+--------------------------------------------------------------------------------
+R12049.00    [CV_HH_POV_RATIO]                              Survey Year: 1997
+  PRIMARY VARIABLE
+
+             RATIO OF HOUSEHOLD INCOME TO POVERTY LEVEL
+ 
+Ratio of household income to poverty level in the previous year.
+ 
+NOTE: /* Topcoded. 2 IMPLIED DECIMAL PLACES */
+ 
+     125           0
+    1396           1 TO 99: .01-.99
+    1392         100 TO 199: 1.00-1.99
+    1289         200 TO 299: 2.00-2.99
+     962         300 TO 399: 3.00-3.99
+     573         400 TO 499: 4.00-4.99
+     321         500 TO 599: 5.00-5.99
+     174         600 TO 699: 6.00-6.99
+      89         700 TO 799: 7.00-7.99
+      56         800 TO 899: 8.00-8.99
+      44         900 TO 999: 9.00-9.99
+       7        1000 TO 1099: 10.00-10.99
+       0        1100 TO 1199: 11.00-11.99
+       0        1200 TO 1299: 12.00-12.99
+       0        1300 TO 1399: 13.00-13.99
+       0        1400 TO 1499: 14.00-14.99
+       0        1500 TO 1599: 15.00-15.99
+     133        1600 TO 1699: 16.00-16.99
+       0        1700 TO 1799: 17.00-17.99
+       0        1800 TO 1899: 18.00-18.99
+       0        1900 TO 1999: 19.00-19.99
+       0        2000 TO 2999: 20.00-29.99
+       0        3000 TO 9999: 30.00+
+  -------
+    6561
+ 
+Refusal(-1)            0
+Don't Know(-2)         0
+Invalid Skip(-3)    1485
+TOTAL =========>    8046   VALID SKIP(-4)     938     NON-INTERVIEW(-5)       0
+ 
+Min:              0        Max:           1627        Mean:              283.18
+ 
+Lead In: R12048.00[Default]
+Default Next Question: R12050.00
+--------------------------------------------------------------------------------
+R12053.00    [CV_YTH_REL_HH_CURRENT]                        Survey Year: 1997
+  PRIMARY VARIABLE
+
+             RS RELATIONSHIP TO HOUSEHOLD PARENT FIGURE
+ 
+Relationship of the parent figure(s)/guardian(s) in household to the youth as of
+the survey date.
+ 
+Note:  This variable was renamed in round 2; the round 1 name was 
+CV_HH_REL_BIRTH.
+ 
+    4395       1 Both biological parents
+     991       2 Two parents, biological mother
+     214       3 Two parents, biological father
+    2531       4 Biological mother only
+     295       5 Biological father only
+     103       6 Adoptive parent(s)
+      44       7 Foster parent(s)
+     197       8 No parents, grandparents
+     114       9 No parents, other relatives
+      69      10 Anything else
+  -------
+    8953
+ 
+Refusal(-1)            0
+Don't Know(-2)         0
+Invalid Skip(-3)      31
+TOTAL =========>    8984   VALID SKIP(-4)       0     NON-INTERVIEW(-5)       0
+ 
+Min:              1        Max:             10        Mean:                2.55
+ 
+Lead In: R12052.00[Default]
+Default Next Question: R12054.00
+--------------------------------------------------------------------------------
 R12358.00    [CV_SAMPLE_TYPE]                               Survey Year: 1997
   PRIMARY VARIABLE
 
