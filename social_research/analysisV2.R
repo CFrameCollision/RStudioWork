@@ -263,8 +263,7 @@ imp_data <- new_data_rmNA %>%
       CV_HIGHEST_DEGREE_EVER_EDT_2017 == 7 ~ 6,
       .default = as.integer(CV_HIGHEST_DEGREE_EVER_EDT_2017)
     )
-  ) %>%
-  select(-KEY_RACE_ETHNICITY_1997)
+  )
 
 # Turn off/on predictor matrix imputation. Put in a random string to test polr w/out imp
 use_predictor_matrix <- TRUE
@@ -398,7 +397,7 @@ m1.1sub <- m1.1 %>%
 
 plot1 <- ggplot(m1.1sub, aes(x = estimate, y = reorder(term, estimate))) +
   geom_point() +
-  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), width = 0.2) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   labs(
     x = "Log Odds Estimate",
@@ -416,7 +415,7 @@ m2.1sub <- m2.1 %>%
 
 plot2 <- ggplot(m2.1sub, aes(x = estimate, y = reorder(term, estimate))) +
   geom_point() +
-  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), width = 0.2) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   labs(
     x = "Log Odds Estimate",
@@ -681,7 +680,7 @@ tidy_pooled_sub <- tidy_pooled %>%
 # title = "Pooled Coefficient Estimates from Imputed polr Model"
 ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
   geom_point() +
-  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), width = 0.2) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   labs(
     x = "Log Odds Estimate",
@@ -709,7 +708,7 @@ tidy_pooled_sub <- tidy_pooled %>%
 # title = "Pooled Coefficient Estimates from Imputed polr Model"
 ggplot(tidy_pooled_sub, aes(x = estimate, y = reorder(term, estimate))) +
   geom_point() +
-  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), width = 0.2) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   labs(x = "Log Odds Estimate", y = "Threshold Estimate") +
   theme_apa()
@@ -727,12 +726,12 @@ ggsave(
 
 # define threshold cutoffs
 thresholds <- c(
-  "None|GED" = 1.29835,
-  "GED|HS" = 2.50778,
-  "HS|AA" = 4.54876,
-  "AA|BA" = 5.02543,
-  "BA|MA" = 6.66202,
-  "MA|PhD" = 9.28300
+  "None|GED" = 1.356,
+  "GED|HS" = 2.617,
+  "HS|AA" = 4.635,
+  "AA|BA" = 5.098,
+  "BA|MA" = 6.657,
+  "MA|PhD" = 8.361
 )
 
 # Create a sequence of linear predictor values (e.g., effects of covariates)
@@ -847,6 +846,81 @@ paperModel <- summary(
   svypooled,
   conf.int = TRUE,
   conf.level = 0.95
+)
+
+paperModelPlot <- paperModel %>%
+  mutate(
+    term = dplyr::recode(
+      term,
+      "DV_RACE_BLACK" = "Black",
+      "DV_RACE_HISPANIC" = "Hispanic",
+      "DV_RACE_MIXED" = "Mixed",
+      "HGCParentEd:DV_RACE_BLACK" = "HGCParentEd:Black",
+      "HGCParentEd:DV_RACE_MIXED" = "HGCParentEd:Mixed",
+      "HGCParentEd:DV_RACE_HISPANIC" = "HGCParentEd:Hispanic"
+    )
+  )
+
+termFilter <- c(
+  "HGCParentEd",
+  "Black",
+  "Hispanic",
+  "Mixed",
+  "HGCParentEd:Black",
+  "HGCParentEd:Hispanic",
+  "HGCParentEd:Mixed"
+)
+
+paperModelPlotSub <- paperModelPlot %>%
+  filter(
+    term %in% termFilter
+  )
+
+ggplot(paperModelPlotSub, aes(x = estimate, y = reorder(term, estimate))) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), width = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(
+    x = "Log Odds Estimate",
+    y = "Predictor Estimate",
+  ) +
+  theme_apa()
+
+ggsave(
+  filename = "paperLogOdds.png",
+  plot = last_plot(),
+  scale = 1,
+  device = "png",
+  dpi = "retina",
+  width = 6.5,
+  height = 5.5,
+  units = "in"
+)
+
+paperModelPlotSub <- paperModelPlot %>%
+  filter(
+    !term %in% termFilter
+  )
+
+ggplot(paperModelPlotSub, aes(x = estimate, y = reorder(term, estimate))) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), width = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  labs(
+    x = "Cutpoints",
+    y = "Education Pairs",
+  ) +
+  theme_apa()
+
+ggsave(
+  filename = "paperCutpoints.png",
+  plot = last_plot(),
+  scale = 1,
+  device = "png",
+  dpi = "retina",
+  width = 6.5,
+  height = 5.5,
+  units = "in"
 )
 
 print("Important!!!! ==================")
